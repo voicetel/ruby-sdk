@@ -18,15 +18,32 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-          bundler-cache: true
+          bundler-cache: false
+      - name: Install runtime + minimal test deps
+        # Indirect dev tooling (rubocop's deps, etc.) requires Ruby 3.3+,
+        # but the SDK itself supports 3.1+. We install only what rspec needs
+        # in this job and run rubocop separately on Ruby 3.3 (see `lint`).
+        run: |
+          gem install bundler -v 2.5.22
+          bundle config set --local without "lint"
+          bundle install --jobs 4
       - name: RSpec
         run: bundle exec rspec
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
       - name: RuboCop
         run: bundle exec rubocop
 
   build:
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, lint]
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
