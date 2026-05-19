@@ -1,0 +1,22 @@
+name: integration
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # weekly Monday 06:00 UTC — within the 6/hr/IP budget
+  workflow_dispatch:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+      - name: Read-only integration tests
+        env:
+          VOICETEL_USERNAME: ${{ secrets.VOICETEL_USERNAME }}
+          VOICETEL_PASSWORD: ${{ secrets.VOICETEL_PASSWORD }}
+          INTEGRATION: "1"
+        run: bundle exec rspec spec/integration
