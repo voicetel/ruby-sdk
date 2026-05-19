@@ -1,0 +1,206 @@
+# RBS type signatures for the VoiceTel Ruby SDK.
+#
+# Hashes/Arrays are deliberately typed as untyped throughout — request bodies
+# and response shapes are spec-defined and would explode this file's size if
+# fully modelled. The public API (Client, Resources, ApiError) is statically
+# typed; payloads pass through as `untyped`.
+
+module VoiceTel
+  VERSION: String
+  API_VERSION: String
+  DEFAULT_BASE_URL: String
+  USER_AGENT: String
+
+  class ApiError < StandardError
+    KINDS: Array[Symbol]
+
+    attr_reader kind: Symbol
+    attr_reader status_code: Integer?
+    attr_reader code: String?
+    attr_reader body: untyped
+
+    def initialize: (String message, ?kind: Symbol, ?status_code: Integer?, ?code: String?, ?body: untyped) -> void
+
+    def bad_request?: () -> bool
+    def authentication?: () -> bool
+    def permission_denied?: () -> bool
+    def not_found?: () -> bool
+    def conflict?: () -> bool
+    def rate_limit?: () -> bool
+    def server?: () -> bool
+    def unknown?: () -> bool
+
+    def self.kind_from_status: (Integer) -> Symbol
+    def self.from_response: (Integer status, String? code, String message, untyped body) -> ApiError
+  end
+
+  module Internal
+    class Transport
+      RETRYABLE_STATUSES: Array[Integer]
+
+      attr_reader base_url: String
+      attr_reader user_agent: String
+      attr_reader timeout: Integer | Float
+      attr_reader max_retries: Integer
+      attr_accessor api_key: String?
+
+      def initialize: (
+        base_url: String?,
+        ?api_key: String?,
+        ?timeout: Integer | Float,
+        ?max_retries: Integer,
+        ?user_agent: String?,
+        ?adapter: Symbol?
+      ) -> void
+
+      def request: (
+        Symbol method, String path,
+        ?query: Hash[untyped, untyped]?, ?body: untyped, ?require_auth: bool
+      ) -> untyped
+
+      def camelize_keys: (untyped) -> untyped
+    end
+  end
+
+  module Resources
+    class Base
+      def initialize: (Internal::Transport transport) -> void
+      def compact_query: (Hash[untyped, untyped]) -> Hash[untyped, untyped]
+    end
+
+    class Account < Base
+      def get: () -> untyped
+      def update: (untyped body) -> untyped
+      def add: (untyped body) -> untyped
+      def signup: (untyped body) -> untyped
+      def cdr: (?start: untyped?, ?end_at: untyped?) -> untyped
+      def credits: () -> untyped
+      def recurring_charges: () -> untyped
+      def payments: () -> untyped
+      def registration: () -> untyped
+      def recover: (untyped body) -> untyped
+    end
+
+    class Acl < Base
+      def list: () -> untyped
+      def add: (untyped body) -> untyped
+      def remove: (untyped body) -> untyped
+    end
+
+    class Authentication < Base
+      AUTH_TYPE_DIGEST: Integer
+      AUTH_TYPE_IP: Integer
+      AUTH_TYPE_DIGEST_OR_IP: Integer
+      AUTH_TYPE_DIGEST_AND_IP: Integer
+
+      def get: () -> untyped
+      def update: (untyped body) -> untyped
+    end
+
+    class E911 < Base
+      def list: () -> untyped
+      def create: (untyped body) -> untyped
+      def validate: (untyped body) -> untyped
+      def get: (String dn) -> untyped
+      def provision: (String dn, untyped body) -> untyped
+      def remove: (String dn) -> untyped
+    end
+
+    class Gateways < Base
+      def list: () -> untyped
+      def add: (untyped body) -> untyped
+      def get: (Integer id) -> untyped
+      def update: (Integer id, untyped body) -> untyped
+      def remove: (Integer id) -> untyped
+      def numbers: (Integer id) -> untyped
+    end
+
+    class INumbering < Base
+      def search_inventory: (
+        ?npa: Integer?, ?nxx: Integer?, ?state: String?, ?ratecenter: String?,
+        ?contains: String?, ?endswith: String?, ?limit: Integer?
+      ) -> untyped
+      def coverage: (?state: String?, ?ratecenter: String?) -> untyped
+      def order: (untyped body) -> untyped
+      def ports: () -> untyped
+      def port: (Integer id) -> untyped
+      def submit_port: (untyped body) -> untyped
+      def port_availability: (String number) -> untyped
+    end
+
+    class Lookups < Base
+      def cnam: (String number) -> untyped
+      def lrn: (String number, String ani) -> untyped
+    end
+
+    class Messaging < Base
+      def history: (?number: String?, ?start: Integer?, ?end_at: Integer?, ?type: String?) -> untyped
+      def send_message: (untyped body) -> untyped
+      def create_brand: (untyped body) -> untyped
+      def campaign_status: () -> untyped
+      def create_campaign: (untyped body) -> untyped
+      def numbers_state: (?numbers: Array[String]?) -> untyped
+    end
+
+    class Numbers < Base
+      def list: () -> untyped
+      def add: (untyped body) -> untyped
+      def get: (String number) -> untyped
+      def remove: (String number) -> untyped
+      def move: (String number, untyped body) -> untyped
+      def release: (String number) -> untyped
+      def set_route: (String number, untyped body) -> untyped
+      def set_translation: (String number, untyped body) -> untyped
+      def set_cnam: (String number, untyped body) -> untyped
+      def set_lidb: (String number, untyped body) -> untyped
+      def get_fax: (String number) -> untyped
+      def set_fax: (String number, untyped body) -> untyped
+      def remove_fax: (String number) -> untyped
+      def set_forward: (String number, untyped body) -> untyped
+      def remove_forward: (String number) -> untyped
+      def get_sms: (String number) -> untyped
+      def set_sms: (String number, untyped body) -> untyped
+      def remove_sms: (String number) -> untyped
+      def get_messaging: (String number) -> untyped
+      def patch_messaging: (String number, untyped body) -> untyped
+      def assign_campaign: (String number, untyped body) -> untyped
+      def unassign_campaign: (String number) -> untyped
+      def bulk_unassign_campaign: (Array[String] numbers) -> untyped
+      def set_port_out_pin: (String number, untyped body) -> untyped
+    end
+
+    class Support < Base
+      def list: () -> untyped
+      def create: (untyped body) -> untyped
+      def get: (Integer id) -> untyped
+      def update: (Integer id, untyped body) -> untyped
+      def delete: (Integer id) -> untyped
+      def messages: (Integer id) -> untyped
+      def reply: (Integer id, untyped body) -> untyped
+    end
+  end
+
+  class Client
+    attr_reader transport: Internal::Transport
+
+    def initialize: (
+      ?api_key: String?, ?base_url: String?, ?timeout: Integer | Float,
+      ?max_retries: Integer, ?user_agent: String?, ?adapter: Symbol?
+    ) -> void
+
+    def login: (username: untyped, password: String) -> String
+    def api_key: () -> String?
+    def base_url: () -> String
+
+    def account: () -> Resources::Account
+    def acl: () -> Resources::Acl
+    def authentication: () -> Resources::Authentication
+    def e911: () -> Resources::E911
+    def gateways: () -> Resources::Gateways
+    def i_numbering: () -> Resources::INumbering
+    def lookups: () -> Resources::Lookups
+    def messaging: () -> Resources::Messaging
+    def numbers: () -> Resources::Numbers
+    def support: () -> Resources::Support
+  end
+end

@@ -1,0 +1,99 @@
+AllCops:
+  TargetRubyVersion: 3.1
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - "vendor/**/*"
+    - "pkg/**/*"
+    - "tmp/**/*"
+    - "coverage/**/*"
+
+# Style/bikeshedding cops we don't care about
+Style/Documentation:
+  Enabled: false
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+Style/FrozenStringLiteralComment:
+  Enabled: true
+Style/HashSyntax:
+  EnforcedShorthandSyntax: either
+Style/ClassAndModuleChildren:
+  Enabled: false
+Style/MultilineBlockChain:
+  Enabled: false
+Style/OptionalBooleanParameter:
+  Enabled: false
+Style/MutableConstant:
+  # `frozen_string_literal: true` is on; literals are already frozen.
+  EnforcedStyle: literals
+Style/FetchEnvVar:
+  Enabled: false
+
+# Metrics — the SDK has a lot of resource methods with similar shapes;
+# the value of these cops here is low.
+Metrics/MethodLength:
+  Max: 50
+Metrics/ClassLength:
+  Max: 300
+Metrics/ModuleLength:
+  Max: 300
+Metrics/AbcSize:
+  Max: 40
+Metrics/CyclomaticComplexity:
+  Max: 15
+Metrics/PerceivedComplexity:
+  Max: 15
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "*.gemspec"
+Metrics/ParameterLists:
+  Max: 8
+
+# Layout
+Layout/LineLength:
+  Max: 140
+
+# Naming — we map snake_case Ruby to camelCase JSON; some methods reflect API names directly.
+Naming/AccessorMethodName:
+  Enabled: false
+Naming/MethodParameterName:
+  AllowedNames:
+    - id
+    - dn
+    - n
+    - q
+    - to
+    - cc
+
+Lint/MissingSuper:
+  Enabled: false
+
+# RSpec — keep noise down
+plugins:
+  - rubocop-rspec
+
+RSpec/ExampleLength:
+  Max: 30
+RSpec/MultipleExpectations:
+  Max: 8
+RSpec/NestedGroups:
+  Max: 5
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
+RSpec/MessageSpies:
+  Enabled: false
+RSpec/SpecFilePathFormat:
+  Enabled: false
+RSpec/IndexedLet:
+  Enabled: false
+RSpec/NoExpectationExample:
+  # Most resource specs assert via webmock's stub_request — if the request
+  # doesn't match, the stub raises. Explicit expects would just duplicate that.
+  Enabled: false
+RSpec/DescribeClass:
+  Enabled: false
+RSpec/StubbedMock:
+  Enabled: false
