@@ -2,7 +2,11 @@
 
 require "faraday"
 require "faraday/retry"
+require "faraday/net_http_persistent"
 require "json"
+require "securerandom"
+require "stringio"
+require "zlib"
 
 require_relative "../api_error"
 require_relative "../version"
@@ -46,7 +50,11 @@ module VoiceTel
           )
         end
 
-        response = @conn.run_request(method, path, body ? JSON.generate(camelize_keys(body)) : nil, build_headers(require_auth)) do |req|
+        headers = build_headers(require_auth)
+        if %i[post put patch].include?(method)
+          headers["Idempotency-Key"] = SecureRandom.uuid
+        end
+        response = @conn.run_request(method, path, body ? JSON.generate(camelize_keys(body)) : nil, headers) do |req|
           req.params.update(camelize_keys(query)) if query && !query.empty?
         end
 
@@ -88,7 +96,7 @@ module VoiceTel
           f.request :retry, retry_options
           f.options.timeout      = @timeout
           f.options.open_timeout = @timeout
-          f.adapter(@adapter || Faraday.default_adapter)
+          f.adapter(@adapter || :net_http_persistent)
         end
       end
 
@@ -105,10 +113,19 @@ module VoiceTel
         }
       end
 
+      def decode_body(response)
+        raw = response.body.to_s
+        encoding = response.headers["content-encoding"] || response.headers["Content-Encoding"]
+        return raw unless encoding&.downcase&.include?("gzip")
+
+        Zlib::GzipReader.new(StringIO.new(raw)).read
+      end
+
       def build_headers(require_auth)
         h = {
           "User-Agent" => @user_agent,
           "Accept" => "application/json",
+          "Accept-Encoding" => "gzip",
           "Content-Type" => "application/json"
         }
         h["Authorization"] = "Bearer #{@api_key}" if require_auth && @api_key && !@api_key.empty?
@@ -117,7 +134,7 @@ module VoiceTel
 
       def handle_response(response)
         status = response.status
-        raw = response.body.to_s
+        raw = decode_body(response)
 
         if status >= 200 && status < 300
           return nil if raw.empty? || status == 204

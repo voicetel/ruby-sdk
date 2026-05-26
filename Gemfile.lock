@@ -3,6 +3,7 @@ PATH
   specs:
     voicetel (2.2.10)
       faraday (~> 2.0)
+      faraday-net_http_persistent (~> 2.0)
       faraday-retry (~> 2.0)
 
 GEM
@@ -12,6 +13,7 @@ GEM
       public_suffix (>= 2.0.2, < 8.0)
     ast (2.4.3)
     bigdecimal (4.1.2)
+    connection_pool (3.0.2)
     crack (1.0.1)
       bigdecimal
       rexml
@@ -23,6 +25,9 @@ GEM
       logger
     faraday-net_http (3.4.2)
       net-http (~> 0.5)
+    faraday-net_http_persistent (2.3.1)
+      faraday (~> 2.5)
+      net-http-persistent (>= 4.0.4, < 5)
     faraday-retry (2.4.0)
       faraday (~> 2.0)
     hashdiff (1.2.1)
@@ -32,6 +37,8 @@ GEM
     logger (1.7.0)
     net-http (0.9.1)
       uri (>= 0.11.1)
+    net-http-persistent (4.0.8)
+      connection_pool (>= 2.2.4, < 4)
     parallel (2.1.0)
     parser (3.3.11.1)
       ast (~> 2.4.1)
