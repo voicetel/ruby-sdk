@@ -51,9 +51,7 @@ module VoiceTel
         end
 
         headers = build_headers(require_auth)
-        if %i[post put patch].include?(method)
-          headers["Idempotency-Key"] = SecureRandom.uuid
-        end
+        headers["Idempotency-Key"] = SecureRandom.uuid if %i[post put patch].include?(method)
         response = @conn.run_request(method, path, body ? JSON.generate(camelize_keys(body)) : nil, headers) do |req|
           req.params.update(camelize_keys(query)) if query && !query.empty?
         end
