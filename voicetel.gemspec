@@ -30,6 +30,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "faraday", "~> 2.0"
-  spec.add_dependency "faraday-retry", "~> 2.0"
   spec.add_dependency "faraday-net_http_persistent", "~> 2.0"
+  spec.add_dependency "faraday-retry", "~> 2.0"
 end
