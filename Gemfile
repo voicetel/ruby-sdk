@@ -15,6 +15,6 @@ end
 # but the SDK itself supports Ruby 3.1+. Keep linting in its own group so the
 # 3.1 / 3.2 matrix legs can skip it via `bundle config set --local without "lint"`.
 group :lint do
-  gem "rubocop", "~> 1.87"
+  gem "rubocop", "~> 1.88"
   gem "rubocop-rspec", "~> 3.10"
 end
