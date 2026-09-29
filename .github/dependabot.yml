@@ -14,6 +14,13 @@ updates:
     commit-message:
       prefix: "deps"
       include: "scope"
+    ignore:
+      # simplecov 1.x requires Ruby >= 3.3, but this SDK supports Ruby 3.1+
+      # (see the Gemfile's "~> 0.22" pin and the CI matrix). Stay on the
+      # 0.x line so Dependabot can resolve under Ruby 3.1.
+      - dependency-name: "simplecov"
+        update-types:
+          - "version-update:semver-major"
 
   - package-ecosystem: "github-actions"
     directory: "/"
