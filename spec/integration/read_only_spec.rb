@@ -15,7 +15,8 @@ RSpec.describe "Integration: read-only", :integration do
   let(:base_url) { ENV["VOICETEL_BASE_URL"] || "https://api.voicetel.com" }
 
   before do
-    skip "VOICETEL_USERNAME / VOICETEL_PASSWORD not set" unless username && password
+    # Secrets arrive as empty strings when unset, so treat "" as absent too.
+    skip "VOICETEL_USERNAME / VOICETEL_PASSWORD not set" if username.to_s.empty? || password.to_s.empty?
     WebMock.allow_net_connect!
   end
 
