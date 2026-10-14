@@ -64,8 +64,8 @@ module VoiceTel
       end
 
       # Recursively transform a Ruby snake_case key Hash/Array structure into
-      # a Hash with camelCase keys, suitable for JSON serialization. Values
-      # that are already strings/numbers/bools/nil/symbols pass through.
+      # a Hash with camelCase keys, suitable for JSON serialization. Data.define
+      # request models are converted to hashes; plain scalars pass through.
       def camelize_keys(obj)
         case obj
         when Hash
@@ -74,6 +74,8 @@ module VoiceTel
           end
         when Array
           obj.map { |v| camelize_keys(v) }
+        when Data
+          camelize_keys(obj.to_h)
         else
           obj
         end

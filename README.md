@@ -2,8 +2,8 @@
 
 The official Ruby client for the [VoiceTel REST API](https://voicetel.com/docs/api/v2.2/) — provision numbers, place orders, validate e911, send messages, and manage your account, all with idiomatic Ruby, structured errors, and zero codegen footprint.
 
-![Version](https://img.shields.io/badge/version-2.2.10-blue)
-![Ruby](https://img.shields.io/badge/ruby-3.1%2B-red)
+![Version](https://img.shields.io/badge/version-2.2.14-blue)
+![Ruby](https://img.shields.io/badge/ruby-3.2%2B-red)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25-brightgreen)
 ![Gem](https://img.shields.io/badge/gem-voicetel-blue)
@@ -28,6 +28,7 @@ The official Ruby client for the [VoiceTel REST API](https://voicetel.com/docs/a
 ### 🧱 Idiomatic Ruby End-to-End
 - **Resource-style API** — `client.numbers.list`, `client.messaging.send_message(...)`, just like the official SDKs in every other language.
 - **snake_case everywhere**, automatically camelCased on the wire so the spec's `fromNumber` / `toNumber` / `messagingBrandId` look like plain Ruby.
+- **Typed Data models** — every response is an immutable `Data.define` object (`VoiceTel::Models::...`) with snake_case readers; unknown server fields are ignored, so the API can grow without breaking you.
 - **RBS signatures** ship in `sig/` — opt into type-checking with Steep or Sorbet, or ignore them and stay dynamic.
 
 ### 🔁 Production-Grade Transport
@@ -63,10 +64,10 @@ gem install voicetel
 Or in your `Gemfile`:
 
 ```ruby
-gem "voicetel", "~> 2.2.10"
+gem "voicetel", "~> 2.2.14"
 ```
 
-Requires Ruby 3.1 or later. Tested on 3.1, 3.2, 3.3, and 3.4.
+Requires Ruby 3.2 or later. Tested on 3.2, 3.3, and 3.4.
 
 ## 🏁 Quickstart
 
@@ -79,11 +80,11 @@ client = VoiceTel::Client.new
 client.login(username: 1_000_000_001, password: "hunter2")
 
 me = client.account.get
-puts "Balance: $#{me['cash']}  |  Caller ID: #{me['callerId']}"
+puts "Balance: $#{me.cash}  |  Caller ID: #{me.caller_id}"
 
 # List your numbers
-client.numbers.list["numbers"].each do |n|
-  puts "#{n['number']}  route=#{n['route']}  cnam=#{n['cnam']}  sms=#{n['smsEnabled']}"
+client.numbers.list.numbers.each do |n|
+  puts "#{n.number}  route=#{n.route}  cnam=#{n.cnam}  sms=#{n.sms_enabled}"
 end
 ```
 
@@ -93,8 +94,8 @@ Or, if you already have an API key:
 client = VoiceTel::Client.new(api_key: ENV.fetch("VOICETEL_API_KEY"))
 
 coverage = client.i_numbering.coverage(state: "NJ")
-coverage["coverage"].each do |bucket|
-  puts "#{bucket['npa']}-#{bucket['nxx']}: #{bucket['count']} TNs available"
+coverage.coverage.each do |bucket|
+  puts "#{bucket.npa}-#{bucket.nxx}: #{bucket.count} TNs available"
 end
 ```
 
@@ -141,7 +142,7 @@ client.numbers.assign_campaign("2015550123", campaign_id: "CABC123")
 # → PUT /v2.2/numbers/2015550123/messaging-campaign { "campaignId": "CABC123" }
 ```
 
-Responses come back as Hash/Array structures with the API's native (camelCase) keys — easy to pass straight to `to_json` or pretty-print.
+Responses come back as immutable `Data` model classes (`VoiceTel::Models::...`) with `snake_case` readers — `assign_campaign` returns a `Models::NumberMessagingCampaignAssignData` whose `status` is `"enabled"` (bound now, path B), `"already"` (was already bound — idempotent), or `"pending"` (path C, provisioning asynchronously — poll `client.numbers.get_messaging(n).pending` until its `state` is `"done"` or `"failed"`). Any model converts to a plain Hash with `#to_h` when you need to serialize or pretty-print it.
 
 ## 🚨 Error Handling
 
@@ -171,7 +172,7 @@ rescue VoiceTel::ApiError => e
 end
 ```
 
-`ApiError#body` preserves the parsed response payload — useful on 409 ACL conflicts, where the server returns structured `{added, removed, failed}` detail.
+`ApiError#body` preserves the parsed response payload — useful on 409 ACL conflicts, where the server returns structured `{added, removed, failed}` detail (build a `Models::AclConflictData` from it to read the rows).
 
 ## ⏱️ Rate Limits
 

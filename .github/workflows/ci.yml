@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby: ["3.1", "3.2", "3.3", "3.4"]
+        ruby: ["3.2", "3.3", "3.4"]
     steps:
       - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
@@ -21,7 +21,7 @@ jobs:
           bundler-cache: false
       - name: Install runtime + minimal test deps
         # Indirect dev tooling (rubocop's deps, etc.) requires Ruby 3.3+,
-        # but the SDK itself supports 3.1+. We install only what rspec needs
+        # but the SDK itself supports 3.2+. We install only what rspec needs
         # in this job and run rubocop separately on Ruby 3.3 (see `lint`).
         run: |
           gem install bundler -v 2.5.22

@@ -6,20 +6,23 @@ RSpec.describe VoiceTel::Resources::Gateways do
   it "GETs the gateway list" do
     stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/gateways")
       .to_return(status: 200, body: envelope(gateways: []))
-    client.gateways.list
+    expect(client.gateways.list).to be_a(VoiceTel::Models::GatewaysListData)
   end
 
   it "POSTs to add" do
     stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/gateways")
       .with(body: { gateway: "1.2.3.4", limit: 50 }.to_json)
-      .to_return(status: 200, body: envelope(id: 1))
-    client.gateways.add(gateway: "1.2.3.4", limit: 50)
+      .to_return(status: 200, body: envelope(id: 1, gateway: "1.2.3.4", limit: 50, system: false))
+    result = client.gateways.add(gateway: "1.2.3.4", limit: 50)
+    expect(result).to be_a(VoiceTel::Models::GatewayEntry)
+    expect(result.id).to eq(1)
+    expect(result.system).to be(false)
   end
 
   it "GETs by id" do
     stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/gateways/7")
       .to_return(status: 200, body: envelope(id: 7))
-    client.gateways.get(7)
+    expect(client.gateways.get(7).id).to eq(7)
   end
 
   it "PUTs an update" do
@@ -38,7 +41,7 @@ RSpec.describe VoiceTel::Resources::Gateways do
   it "GETs bound numbers" do
     stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/gateways/7/numbers")
       .to_return(status: 200, body: envelope(numbers: []))
-    client.gateways.numbers(7)
+    expect(client.gateways.numbers(7)).to be_a(VoiceTel::Models::GatewayNumbersData)
   end
 
   it "raises on 400" do

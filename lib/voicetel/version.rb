@@ -2,11 +2,11 @@
 
 module VoiceTel
   # The semantic version of the VoiceTel Ruby SDK. This tracks the API version
-  # it targets (currently v2.2.10).
-  VERSION = "2.2.10"
+  # it targets (currently v2.2.14).
+  VERSION = "2.2.14"
 
   # The VoiceTel REST API version this SDK targets.
-  API_VERSION = "v2.2.10"
+  API_VERSION = "v2.2.14"
 
   # Default production API endpoint.
   DEFAULT_BASE_URL = "https://api.voicetel.com"

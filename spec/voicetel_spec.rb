@@ -3,8 +3,8 @@
 RSpec.describe VoiceTel do
   describe "module constants" do
     it "tracks the API version" do
-      expect(described_class::VERSION).to eq("2.2.10")
-      expect(described_class::API_VERSION).to eq("v2.2.10")
+      expect(described_class::VERSION).to eq("2.2.14")
+      expect(described_class::API_VERSION).to eq("v2.2.14")
       expect(described_class::DEFAULT_BASE_URL).to eq("https://api.voicetel.com")
     end
 

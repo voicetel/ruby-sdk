@@ -8,19 +8,28 @@ module VoiceTel
     #
     # The DELETE /v2.2/acl endpoint is unusual: it returns 200 with a body
     # (not 204). 409 conflicts include partial success/failure detail in the
-    # body — surfaced through ApiError#body so callers can inspect it.
+    # body — surfaced through ApiError#body so callers can inspect it (or
+    # build a Models::AclConflictData from it).
     class Acl < Base
+      # GET /v2.2/acl — the current allowlist.
+      #
+      # @return [Models::AclListData]
       def list
-        @transport.request(:get, "/v2.2/acl")
+        Models::AclListData.build(@transport.request(:get, "/v2.2/acl"))
       end
 
-      # body example: { acl: [{ cidr: "1.2.3.0/24" }] }
+      # POST /v2.2/acl — body example: { acl: [{ cidr: "1.2.3.0/24" }] }
+      #
+      # @return [Models::AclAddData]
       def add(body)
-        @transport.request(:post, "/v2.2/acl", body: body)
+        Models::AclAddData.build(@transport.request(:post, "/v2.2/acl", body: payload(body)))
       end
 
+      # DELETE /v2.2/acl — returns 200 with a body, not 204.
+      #
+      # @return [Models::AclRemoveData]
       def remove(body)
-        @transport.request(:delete, "/v2.2/acl", body: body)
+        Models::AclRemoveData.build(@transport.request(:delete, "/v2.2/acl", body: payload(body)))
       end
     end
   end

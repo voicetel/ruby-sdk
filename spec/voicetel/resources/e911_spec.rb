@@ -6,25 +6,29 @@ RSpec.describe VoiceTel::Resources::E911 do
   it "GETs the e911 list" do
     stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/e911")
       .to_return(status: 200, body: envelope(records: []))
-    client.e911.list
+    expect(client.e911.list).to be_a(VoiceTel::Models::E911AllData)
   end
 
   it "POSTs to create" do
     stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/e911")
       .to_return(status: 200, body: envelope(record: { dn: "12015550123" }))
-    client.e911.create(dn: "2015550123", callername: "X", address1: "1 Main", city: "Newark", state: "NJ", zip: "07101")
+    result = client.e911.create(dn: "2015550123", callername: "X", address1: "1 Main", city: "Newark", state: "NJ", zip: "07101")
+    expect(result).to be_a(VoiceTel::Models::E911RecordData)
+    expect(result.record.dn).to eq("12015550123")
   end
 
   it "POSTs to validate" do
     stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/e911/validations")
       .to_return(status: 200, body: envelope(address: { addressid: 42 }))
-    client.e911.validate(address1: "1", city: "Newark", state: "NJ", zip: "07101")
+    result = client.e911.validate(address1: "1", city: "Newark", state: "NJ", zip: "07101")
+    expect(result).to be_a(VoiceTel::Models::E911ValidateData)
+    expect(result.address.addressid).to eq(42)
   end
 
   it "GETs by dn" do
     stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/e911/2015550123")
       .to_return(status: 200, body: envelope(record: { dn: "12015550123" }))
-    client.e911.get("2015550123")
+    expect(client.e911.get("2015550123").record.dn).to eq("12015550123")
   end
 
   it "PUTs provision by dn" do

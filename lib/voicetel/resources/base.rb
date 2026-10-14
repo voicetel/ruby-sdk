@@ -16,6 +16,12 @@ module VoiceTel
       def compact_query(hash)
         hash.reject { |_, v| v.nil? || v == "" }
       end
+
+      # Request bodies accept either a plain Hash (snake_case keys) or a
+      # Models request object; the transport only speaks Hashes.
+      def payload(body)
+        body.respond_to?(:to_payload) ? body.to_payload : body
+      end
     end
   end
 end

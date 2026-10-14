@@ -8,14 +8,14 @@ Gem::Specification.new do |spec|
   spec.authors       = ["VoiceTel"]
   spec.email         = ["support@voicetel.com"]
 
-  spec.summary       = "Official Ruby SDK for the VoiceTel REST API (v2.2.10)."
+  spec.summary       = "Official Ruby SDK for the VoiceTel REST API (v2.2.14)."
   spec.description   = "Idiomatic Ruby client for the VoiceTel REST API: provision numbers, " \
                        "place orders, validate e911, send SMS/MMS, manage 10DLC campaigns, and " \
-                       "run support tickets, all with typed DTOs, structured errors, and " \
+                       "run support tickets, all with typed Data models, structured errors, and " \
                        "automatic retry on 429/5xx."
   spec.homepage      = "https://voicetel.com/docs/api/v2.2/"
   spec.license       = "MIT"
-  spec.required_ruby_version = ">= 3.1.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata = {
     "homepage_uri" => spec.homepage,

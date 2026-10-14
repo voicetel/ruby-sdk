@@ -1,9 +1,10 @@
 # RBS type signatures for the VoiceTel Ruby SDK.
 #
-# Hashes/Arrays are deliberately typed as untyped throughout — request bodies
-# and response shapes are spec-defined and would explode this file's size if
-# fully modelled. The public API (Client, Resources, ApiError) is statically
-# typed; payloads pass through as `untyped`.
+# Response/request models (VoiceTel::Models) are Data.define classes; they
+# are declared here as plain classes with typed attr_readers (plus .build
+# for responses and #to_payload for requests) rather than as < Data, which
+# keeps these signatures usable across RBS versions. The public API
+# (Client, Resources, ApiError) is statically typed end to end.
 
 module VoiceTel
   VERSION: String
@@ -32,6 +33,1177 @@ module VoiceTel
 
     def self.kind_from_status: (Integer) -> Symbol
     def self.from_response: (Integer status, String? code, String message, untyped body) -> ApiError
+  end
+
+  module Models
+    module Base
+      def self.nested: () -> Hash[Symbol, untyped]
+      def self.wire_keys: () -> Hash[Symbol, String]
+      def self.build: (untyped payload) -> untyped
+    end
+
+    module Request
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    def self.wire_key: (Symbol member) -> String
+    def self.plain: (untyped value) -> untyped
+
+    # ---- common ----
+
+    class CidrEntry
+      attr_reader cidr: String
+      def self.build: (untyped payload) -> CidrEntry?
+      def initialize: (cidr: String) -> void
+    end
+
+    class ErrorResponse
+      attr_reader status: String?
+      attr_reader code: String?
+      attr_reader message: String?
+      attr_reader error: String?
+      attr_reader details: Hash[untyped, untyped]?
+      def self.build: (untyped payload) -> ErrorResponse?
+      def initialize: (status: String?, code: String?, message: String?, error: String?, details: Hash[untyped, untyped]?) -> void
+    end
+
+    # ---- account ----
+
+    class AccountRates
+      attr_reader cnam: Float?
+      attr_reader intl_max: Float?
+      attr_reader nibble: Float?
+      attr_reader lrn: Float?
+      attr_reader fax: Float?
+      attr_reader tf_adj: Float?
+      attr_reader did: Float?
+      attr_reader mms: Float?
+      attr_reader sms: Float?
+      def self.build: (untyped payload) -> AccountRates?
+    end
+
+    class AccountServices
+      attr_reader e911: bool?
+      attr_reader cnam: bool?
+      attr_reader bypass_media: bool?
+      attr_reader intl: bool?
+      attr_reader mms: bool?
+      attr_reader dialer: bool?
+      attr_reader sms: bool?
+      def self.build: (untyped payload) -> AccountServices?
+    end
+
+    class CreditEntry
+      attr_reader date: String
+      attr_reader paid: bool
+      attr_reader amount: Float
+      def self.build: (untyped payload) -> CreditEntry?
+    end
+
+    class PaymentEntry
+      attr_reader transaction_id: String?
+      attr_reader date: String
+      attr_reader payer_email: String?
+      attr_reader status: String
+      attr_reader amount: Float
+      def self.build: (untyped payload) -> PaymentEntry?
+    end
+
+    class CdrEntryValue
+      attr_reader dur: String?
+      attr_reader dst: String?
+      attr_reader ba: String?
+      attr_reader nr: String?
+      attr_reader cn: String?
+      attr_reader ip: String?
+      attr_reader cid: String?
+      def self.build: (untyped payload) -> CdrEntryValue?
+    end
+
+    class CdrEntry
+      attr_reader id: String
+      attr_reader key: Array[untyped]
+      attr_reader value: CdrEntryValue
+      def self.build: (untyped payload) -> CdrEntry?
+    end
+
+    class MrcCharge
+      attr_reader amount: Float
+      attr_reader description: String?
+      def self.build: (untyped payload) -> MrcCharge?
+    end
+
+    class AccountAddRequest
+      attr_reader username: Integer
+      attr_reader name: String
+      attr_reader email: String
+      attr_reader master_account: Integer?
+      def initialize: (username: Integer, name: String, email: String, master_account: Integer?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class AccountPutRequest
+      attr_reader notify: bool?
+      attr_reader notify_threshold: Integer?
+      attr_reader timezone: String?
+      attr_reader caller_id: String?
+      attr_reader e911: bool?
+      attr_reader intl: bool?
+      attr_reader sms: bool?
+      attr_reader mms: bool?
+      attr_reader ccs: Integer?
+      def initialize: (notify: bool?, notify_threshold: Integer?, timezone: String?, caller_id: String?, e911: bool?,
+                       intl: bool?, sms: bool?, mms: bool?, ccs: Integer?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class AccountSignupRequest
+      attr_reader name: String
+      attr_reader email: String
+      attr_reader promo: String?
+      def initialize: (name: String, email: String, promo: String?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class AccountRecoverRequest
+      attr_reader email: String
+      def initialize: (email: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class ApiKeyRequest
+      attr_reader username: Integer
+      attr_reader password: String
+      def initialize: (username: Integer, password: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class AccountAddData
+      attr_reader password: String?
+      attr_reader email: String?
+      attr_reader master_account: String?
+      attr_reader username: String?
+      attr_reader name: String?
+      def self.build: (untyped payload) -> AccountAddData?
+    end
+
+    class AccountApiKeyData
+      attr_reader apikey: String
+      def self.build: (untyped payload) -> AccountApiKeyData?
+    end
+
+    class AccountCdrData
+      attr_reader cdr: Array[CdrEntry]
+      attr_reader start: Integer
+      attr_reader end_at: Integer
+      def self.build: (untyped payload) -> AccountCdrData?
+    end
+
+    class AccountCreditsData
+      attr_reader credits: Array[CreditEntry]
+      def self.build: (untyped payload) -> AccountCreditsData?
+    end
+
+    class AccountData
+      attr_reader username: String?
+      attr_reader name: String?
+      attr_reader email: String?
+      attr_reader enabled: bool?
+      attr_reader created: String?
+      attr_reader cash: Float?
+      attr_reader caller_id: String?
+      attr_reader timezone: String?
+      attr_reader auth_type: Integer?
+      attr_reader ccs: Integer?
+      attr_reader notify: bool?
+      attr_reader notify_threshold: Integer?
+      attr_reader rates: AccountRates?
+      attr_reader services: AccountServices?
+      def self.build: (untyped payload) -> AccountData?
+    end
+
+    class AccountMrcData
+      attr_reader charges: Array[MrcCharge]
+      attr_reader total: Float
+      def self.build: (untyped payload) -> AccountMrcData?
+    end
+
+    class AccountPaymentsData
+      attr_reader payments: Array[PaymentEntry]
+      def self.build: (untyped payload) -> AccountPaymentsData?
+    end
+
+    class AccountPutData
+      attr_reader updated: Array[String]
+      def self.build: (untyped payload) -> AccountPutData?
+    end
+
+    class AccountRecoverData
+      attr_reader message: String?
+      def self.build: (untyped payload) -> AccountRecoverData?
+    end
+
+    class AccountRegistrationData
+      attr_reader agent: String?
+      attr_reader uri: String?
+      attr_reader expires: Integer?
+      def self.build: (untyped payload) -> AccountRegistrationData?
+    end
+
+    class AccountSignupData
+      attr_reader username: String?
+      attr_reader name: String?
+      attr_reader email: String?
+      attr_reader password: String?
+      def self.build: (untyped payload) -> AccountSignupData?
+    end
+
+    # ---- acl ----
+
+    class AclModifyRequest
+      attr_reader acl: Array[CidrEntry | Hash[untyped, untyped]]
+      def initialize: (acl: Array[CidrEntry | Hash[untyped, untyped]]) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class AclListData
+      attr_reader acl: Array[CidrEntry]
+      def self.build: (untyped payload) -> AclListData?
+    end
+
+    class AclAddData
+      attr_reader added: Array[CidrEntry]
+      def self.build: (untyped payload) -> AclAddData?
+    end
+
+    class AclRemoveData
+      attr_reader removed: Array[CidrEntry]
+      def self.build: (untyped payload) -> AclRemoveData?
+    end
+
+    class AclFailedEntry
+      attr_reader cidr: String
+      attr_reader reason: String
+      def self.build: (untyped payload) -> AclFailedEntry?
+    end
+
+    class AclConflictData
+      attr_reader added: Array[CidrEntry]?
+      attr_reader removed: Array[CidrEntry]?
+      attr_reader failed: Array[AclFailedEntry]?
+      def self.build: (untyped payload) -> AclConflictData?
+    end
+
+    # ---- authentication ----
+
+    class AuthPutRequest
+      attr_reader auth_type: Integer?
+      attr_reader password: String?
+      def initialize: (auth_type: Integer?, password: String?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class AuthGetData
+      attr_reader auth_type: Integer
+      attr_reader auth_type_description: String
+      attr_reader acl: Array[CidrEntry]
+      def self.build: (untyped payload) -> AuthGetData?
+    end
+
+    class AuthUpdatedEntry
+      attr_reader field: String
+      attr_reader value: Integer?
+      def self.build: (untyped payload) -> AuthUpdatedEntry?
+    end
+
+    class AuthPutData
+      attr_reader updated: Array[AuthUpdatedEntry]
+      def self.build: (untyped payload) -> AuthPutData?
+    end
+
+    class AuthPutConflictData
+      attr_reader updated: Array[AuthUpdatedEntry]?
+      def self.build: (untyped payload) -> AuthPutConflictData?
+    end
+
+    # ---- e911 ----
+
+    class E911AddressRequest
+      attr_reader address1: String
+      attr_reader address2: String?
+      attr_reader city: String
+      attr_reader state: String
+      attr_reader zip: String
+      def initialize: (address1: String, address2: String?, city: String, state: String, zip: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class E911CreateRequest
+      attr_reader dn: String
+      attr_reader callername: String
+      attr_reader address1: String
+      attr_reader address2: String?
+      attr_reader city: String
+      attr_reader state: String
+      attr_reader zip: String
+      def initialize: (dn: String, callername: String, address1: String, address2: String?, city: String, state: String,
+                       zip: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class E911ProvisionByIdRequest
+      attr_reader callername: String
+      attr_reader addressid: Integer
+      def initialize: (callername: String, addressid: Integer) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class E911Entry
+      attr_reader dn: String
+      attr_reader callername: String
+      attr_reader address1: String
+      attr_reader address2: String?
+      attr_reader city: String
+      attr_reader state: String
+      attr_reader zip: String
+      def self.build: (untyped payload) -> E911Entry?
+    end
+
+    class E911ValidatedAddress
+      attr_reader addressid: Integer
+      attr_reader address1: String
+      attr_reader address2: String?
+      attr_reader city: String
+      attr_reader state: String
+      attr_reader zip: String
+      def self.build: (untyped payload) -> E911ValidatedAddress?
+    end
+
+    class E911AllData
+      attr_reader records: Array[E911Entry]
+      def self.build: (untyped payload) -> E911AllData?
+    end
+
+    class E911RecordData
+      attr_reader record: E911Entry
+      def self.build: (untyped payload) -> E911RecordData?
+    end
+
+    class E911ValidateData
+      attr_reader address: E911ValidatedAddress
+      def self.build: (untyped payload) -> E911ValidateData?
+    end
+
+    # ---- gateways ----
+
+    class GatewayAddRequest
+      attr_reader gateway: String
+      attr_reader prefix: String?
+      attr_reader limit: Integer?
+      def initialize: (gateway: String, prefix: String?, limit: Integer?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class GatewayUpdateRequest
+      attr_reader gateway: String?
+      attr_reader prefix: String?
+      attr_reader limit: Integer?
+      def initialize: (gateway: String?, prefix: String?, limit: Integer?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class GatewayEntry
+      attr_reader id: Integer?
+      attr_reader gateway: String?
+      attr_reader prefix: String?
+      attr_reader limit: Integer?
+      attr_reader system: bool?
+      def self.build: (untyped payload) -> GatewayEntry?
+    end
+
+    class GatewayNumberSummary
+      attr_reader number: String
+      attr_reader translated: String
+      attr_reader forward: bool
+      attr_reader forward_to: String?
+      attr_reader cnam: bool
+      attr_reader carrier: Integer
+      attr_reader sms_enabled: bool
+      attr_reader fax_enabled: bool
+      def self.build: (untyped payload) -> GatewayNumberSummary?
+    end
+
+    class GatewaysListData
+      attr_reader gateways: Array[GatewayEntry]
+      def self.build: (untyped payload) -> GatewaysListData?
+    end
+
+    class GatewayNumbersData
+      attr_reader numbers: Array[GatewayNumberSummary]
+      def self.build: (untyped payload) -> GatewayNumbersData?
+    end
+
+    # ---- iNumbering ----
+
+    class OrderCreateRequest
+      attr_reader numbers: Array[String | OrderNumberSpec]
+      def initialize: (numbers: Array[String | OrderNumberSpec]) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class OrderNumberSpec
+      attr_reader number: String
+      attr_reader route: Integer?
+      def initialize: (number: String, route: Integer?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class PortFeatureLidb
+      attr_reader name: String
+      def initialize: (name: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class PortFeatureRouting
+      attr_reader gateway_id: Integer
+      def initialize: (gateway_id: Integer) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class PortFeatureSms
+      attr_reader campaign_id: String?
+      def initialize: (campaign_id: String?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class PortFeature
+      attr_reader number: String
+      attr_reader routing: PortFeatureRouting | Hash[untyped, untyped]?
+      attr_reader lidb: PortFeatureLidb | Hash[untyped, untyped]?
+      attr_reader sms: PortFeatureSms | Hash[untyped, untyped]?
+      def initialize: (number: String, routing: PortFeatureRouting | Hash[untyped, untyped]?,
+                       lidb: PortFeatureLidb | Hash[untyped, untyped]?,
+                       sms: PortFeatureSms | Hash[untyped, untyped]?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class PortSubmitRequest
+      attr_reader did: Array[String]
+      attr_reader name: String
+      attr_reader name_type: String
+      attr_reader lc_btn: String
+      attr_reader lc_account_number: String
+      attr_reader street_number: String
+      attr_reader street: String
+      attr_reader street_type: String
+      attr_reader city: String
+      attr_reader state: String
+      attr_reader zip: String
+      attr_reader country: String
+      attr_reader auth_person: String
+      attr_reader street_prefix: String?
+      attr_reader street_suffix: String?
+      attr_reader floor: String?
+      attr_reader room: String?
+      attr_reader building: String?
+      attr_reader unit_value: String?
+      attr_reader desired_due_date: String?
+      attr_reader pin: String?
+      attr_reader features: Array[PortFeature | Hash[untyped, untyped]]?
+      def initialize: (did: Array[String], name: String, name_type: String, lc_btn: String, lc_account_number: String,
+                       street_number: String, street: String, street_type: String, city: String, state: String,
+                       zip: String, country: String, auth_person: String, street_prefix: String?,
+                       street_suffix: String?, floor: String?, room: String?, building: String?,
+                       unit_value: String?, desired_due_date: String?, pin: String?,
+                       features: Array[PortFeature | Hash[untyped, untyped]]?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class InventoryItem
+      attr_reader number: String
+      attr_reader rate_center: String
+      attr_reader city: String
+      attr_reader province: String
+      attr_reader lata: String
+      def self.build: (untyped payload) -> InventoryItem?
+    end
+
+    class InventoryCoverageItem
+      attr_reader count: Integer
+      attr_reader npa: String?
+      attr_reader nxx: String?
+      attr_reader block: String?
+      attr_reader city: String?
+      attr_reader rc_abbre: String?
+      attr_reader lata: String?
+      attr_reader loc_state: String?
+      def self.build: (untyped payload) -> InventoryCoverageItem?
+    end
+
+    class PortSummary
+      attr_reader status: String
+      attr_reader id: String?
+      attr_reader pid: String?
+      attr_reader foc: String?
+      attr_reader created_at: String?
+      attr_reader message: String?
+      def self.build: (untyped payload) -> PortSummary?
+    end
+
+    class PortDetail
+      attr_reader status: String
+      attr_reader id: String?
+      attr_reader pid: String?
+      attr_reader name: String?
+      attr_reader email: String?
+      attr_reader foc: String?
+      attr_reader created_at: String?
+      attr_reader numbers: Array[String]?
+      attr_reader message: String?
+      def self.build: (untyped payload) -> PortDetail?
+    end
+
+    class InventorySearchData
+      attr_reader numbers: Array[InventoryItem]
+      def self.build: (untyped payload) -> InventorySearchData?
+    end
+
+    class InventoryCoverageData
+      attr_reader coverage: Array[InventoryCoverageItem]
+      def self.build: (untyped payload) -> InventoryCoverageData?
+    end
+
+    class OrderFailedEntry
+      attr_reader number: String
+      attr_reader reason: String
+      def self.build: (untyped payload) -> OrderFailedEntry?
+    end
+
+    class OrderCreateData
+      attr_reader order_id: String
+      attr_reader amount_charged: Float
+      attr_reader numbers_ordered: Array[String]
+      attr_reader failed: Array[OrderFailedEntry]
+      def self.build: (untyped payload) -> OrderCreateData?
+    end
+
+    class PortListData
+      attr_reader ports: Array[PortSummary]
+      def self.build: (untyped payload) -> PortListData?
+    end
+
+    class PortDetailData
+      attr_reader port: PortDetail
+      def self.build: (untyped payload) -> PortDetailData?
+    end
+
+    class PortSubmitData
+      attr_reader pid: String
+      attr_reader ticket: Integer
+      attr_reader message: String
+      attr_reader loa_url: String
+      attr_reader port_url: String
+      def self.build: (untyped payload) -> PortSubmitData?
+    end
+
+    class PortAvailabilityData
+      attr_reader number: String
+      attr_reader portable: bool
+      attr_reader losing_carrier: String?
+      attr_reader local_routing_number: String?
+      attr_reader rate_center_tier: String?
+      attr_reader reason: String?
+      def self.build: (untyped payload) -> PortAvailabilityData?
+    end
+
+    # ---- lookups ----
+
+    class CnamData
+      attr_reader cnam: String?
+      attr_reader number: String
+      def self.build: (untyped payload) -> CnamData?
+    end
+
+    class LrnData
+      attr_reader lrn: String?
+      attr_reader state: String?
+      attr_reader city: String?
+      attr_reader rc: String?
+      attr_reader lata: String?
+      attr_reader ocn: String?
+      attr_reader lec: String?
+      attr_reader lec_type: String?
+      attr_reader jurisdiction: String?
+      attr_reader local: String?
+      def self.build: (untyped payload) -> LrnData?
+    end
+
+    class LrnLookupData
+      attr_reader ani: String
+      attr_reader destination: String
+      attr_reader lrn: LrnData
+      def self.build: (untyped payload) -> LrnLookupData?
+    end
+
+    # ---- messaging ----
+
+    class MessageSendRequest
+      attr_reader from_number: String
+      attr_reader to_number: String
+      attr_reader text: String
+      attr_reader subject: String?
+      attr_reader media_urls: Array[String]?
+      def initialize: (from_number: String, to_number: String, text: String, subject: String?,
+                       media_urls: Array[String]?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class MessagingBrandCreateRequest
+      attr_reader messaging_brand_id: String
+      attr_reader messaging_brand_name: String
+      attr_reader messaging_brand_description: String?
+      def initialize: (messaging_brand_id: String, messaging_brand_name: String,
+                       messaging_brand_description: String?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class MessagingCampaignCreateRequest
+      attr_reader messaging_brand_id: String
+      attr_reader external_campaign_id: String
+      attr_reader campaign_description: String
+      attr_reader campaign_class_name: String?
+      attr_reader campaign_start_date: String?
+      def initialize: (messaging_brand_id: String, external_campaign_id: String, campaign_description: String,
+                       campaign_class_name: String?, campaign_start_date: String?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class MessageRecordValue
+      attr_reader source_number: String?
+      attr_reader destination_number: String?
+      attr_reader direction: String?
+      attr_reader rate: String?
+      attr_reader number: Integer?
+      attr_reader message: String?
+      def self.build: (untyped payload) -> MessageRecordValue?
+    end
+
+    class MessageRecord
+      attr_reader id: String
+      attr_reader key: Array[untyped]
+      attr_reader value: MessageRecordValue
+      def self.build: (untyped payload) -> MessageRecord?
+    end
+
+    class MessageHistoryData
+      attr_reader number: String
+      attr_reader type: String
+      attr_reader from_ts: Integer
+      attr_reader to_ts: Integer
+      attr_reader messages: Array[MessageRecord]
+      def self.build: (untyped payload) -> MessageHistoryData?
+    end
+
+    class MessageSendData
+      attr_reader id: String
+      attr_reader type: String
+      attr_reader from_number: String
+      attr_reader to_number: String
+      attr_reader parts: Integer
+      attr_reader subject: String?
+      attr_reader media_urls: Array[String]?
+      def self.build: (untyped payload) -> MessageSendData?
+    end
+
+    class BrandRegistrationResult
+      attr_reader status_code: String
+      attr_reader status: String
+      def self.build: (untyped payload) -> BrandRegistrationResult?
+    end
+
+    class MessagingBrandCreateData
+      attr_reader result: BrandRegistrationResult
+      def self.build: (untyped payload) -> MessagingBrandCreateData?
+    end
+
+    class CampaignRegistrationResult
+      attr_reader status_code: String
+      attr_reader status: String
+      def self.build: (untyped payload) -> CampaignRegistrationResult?
+    end
+
+    class MessagingCampaignCreateData
+      attr_reader result: CampaignRegistrationResult
+      def self.build: (untyped payload) -> MessagingCampaignCreateData?
+    end
+
+    class CampaignDcaCarrier
+      attr_reader carrier: String
+      attr_reader status: String
+      attr_reader detail: String
+      attr_reader updated_at: String
+      def self.build: (untyped payload) -> CampaignDcaCarrier?
+    end
+
+    class CampaignDca
+      attr_reader election_complete: bool
+      attr_reader elected_carriers: Array[String]?
+      attr_reader carriers: Array[CampaignDcaCarrier]
+      def self.build: (untyped payload) -> CampaignDca?
+    end
+
+    class CampaignStatusItem
+      attr_reader id: String
+      attr_reader status: String
+      attr_reader numbers: Array[String]
+      attr_reader dca: CampaignDca?
+      def self.build: (untyped payload) -> CampaignStatusItem?
+    end
+
+    class MessagingCampaignStatusData
+      attr_reader campaigns: Array[CampaignStatusItem]
+      def self.build: (untyped payload) -> MessagingCampaignStatusData?
+    end
+
+    # ---- numbers ----
+
+    class NumberAddRequest
+      attr_reader number: String
+      attr_reader route: Integer?
+      def initialize: (number: String, route: Integer?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class NumberRouteRequest
+      attr_reader route: Integer
+      def initialize: (route: Integer) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class NumberCnamRequest
+      attr_reader enabled: bool
+      def initialize: (enabled: bool) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class NumberLidbRequest
+      attr_reader cnam: String
+      attr_reader customer_order_reference: String?
+      def initialize: (cnam: String, customer_order_reference: String?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class NumberFaxRequest
+      attr_reader email: String
+      def initialize: (email: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class NumberForwardRequest
+      attr_reader destination: String
+      def initialize: (destination: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class NumberTranslationRequest
+      attr_reader translation: String
+      def initialize: (translation: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class NumberSmsRequest
+      attr_reader type: String
+      attr_reader resource: String
+      def initialize: (type: String, resource: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class NumberMessagingPatchRequest
+      attr_reader route_in: Integer?
+      attr_reader route_out: Integer?
+      def initialize: (route_in: Integer?, route_out: Integer?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class NumberCampaignAssignRequest
+      attr_reader campaign_id: String
+      def initialize: (campaign_id: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class NumberMoveRequest
+      attr_reader account_id: Integer
+      attr_reader route: Integer
+      def initialize: (account_id: Integer, route: Integer) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class PortOutPinUpdateRequest
+      attr_reader pin: String
+      def initialize: (pin: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class NumberDetail
+      attr_reader number: String
+      attr_reader translated: String
+      attr_reader route: Integer
+      attr_reader gateway: String?
+      attr_reader cnam: bool
+      attr_reader forward: bool
+      attr_reader forward_to: String?
+      attr_reader carrier: Integer
+      attr_reader sms_enabled: bool
+      attr_reader fax_enabled: bool
+      def self.build: (untyped payload) -> NumberDetail?
+    end
+
+    class CampaignBinding
+      attr_reader id: String
+      attr_reader network: String
+      attr_reader status: String
+      attr_reader upstream_cnp_id: String
+      def self.build: (untyped payload) -> CampaignBinding?
+    end
+
+    class MessagingEnablementJob
+      attr_reader campaign_id: String
+      attr_reader state: String
+      attr_reader message: String
+      attr_reader created_at: String
+      attr_reader updated_at: String
+      def self.build: (untyped payload) -> MessagingEnablementJob?
+    end
+
+    class NumberMessagingState
+      attr_reader number: String
+      attr_reader on_account: bool?
+      attr_reader enabled: bool
+      attr_reader carrier: Integer
+      attr_reader route_in: Integer
+      attr_reader resource: String
+      attr_reader network: String?
+      attr_reader campaign: CampaignBinding?
+      attr_reader pending: MessagingEnablementJob?
+      def self.build: (untyped payload) -> NumberMessagingState?
+    end
+
+    class NumberAddData
+      attr_reader number: String
+      attr_reader route: Integer
+      def self.build: (untyped payload) -> NumberAddData?
+    end
+
+    class NumberCnamData
+      attr_reader number: String
+      attr_reader cnam: bool
+      def self.build: (untyped payload) -> NumberCnamData?
+    end
+
+    class NumberFaxData
+      attr_reader number: String
+      attr_reader email: String
+      def self.build: (untyped payload) -> NumberFaxData?
+    end
+
+    class NumberForwardData
+      attr_reader number: String
+      attr_reader forward_to: String?
+      def self.build: (untyped payload) -> NumberForwardData?
+    end
+
+    class NumberLidbData
+      attr_reader number: String
+      attr_reader cnam: String
+      attr_reader customer_order_reference: String
+      attr_reader carrier_status: String
+      def self.build: (untyped payload) -> NumberLidbData?
+    end
+
+    class NumberMessagingPatchData
+      attr_reader number: String
+      attr_reader updated: Array[String]
+      def self.build: (untyped payload) -> NumberMessagingPatchData?
+    end
+
+    class NumberMoveData
+      attr_reader number: String
+      attr_reader account_id: Integer
+      attr_reader route: Integer
+      def self.build: (untyped payload) -> NumberMoveData?
+    end
+
+    class NumberRouteData
+      attr_reader number: String
+      attr_reader route: Integer
+      def self.build: (untyped payload) -> NumberRouteData?
+    end
+
+    class NumberSmsData
+      attr_reader number: String
+      attr_reader type: String
+      attr_reader resource: String
+      def self.build: (untyped payload) -> NumberSmsData?
+    end
+
+    class NumberTranslationData
+      attr_reader number: String
+      attr_reader translation: String
+      def self.build: (untyped payload) -> NumberTranslationData?
+    end
+
+    class NumberMessagingCampaignAssignData
+      attr_reader number: String
+      attr_reader campaign_id: String
+      attr_reader status: String
+      attr_reader network: String?
+      attr_reader upstream_cnp_id: String?
+      attr_reader carrier: Integer
+      attr_reader already_assigned: bool
+      attr_reader order_id: String | Integer | nil
+      attr_reader previous_network: String?
+      attr_reader previous_network_cleared: bool
+      attr_reader warning: String?
+      attr_reader message: String?
+      attr_reader job: MessagingEnablementJob?
+      def self.build: (untyped payload) -> NumberMessagingCampaignAssignData?
+    end
+
+    class NumberMessagingCampaignUnassignData
+      attr_reader number: String
+      attr_reader campaign_id: String
+      attr_reader network: String?
+      attr_reader upstream_cnp_id: String?
+      attr_reader unassigned: bool
+      def self.build: (untyped payload) -> NumberMessagingCampaignUnassignData?
+    end
+
+    class CampaignUnassignFailure
+      attr_reader number: String
+      attr_reader reason: String
+      def self.build: (untyped payload) -> CampaignUnassignFailure?
+    end
+
+    class NumbersMessagingCampaignUnassignData
+      attr_reader campaign_id: String
+      attr_reader network: String?
+      attr_reader upstream_cnp_id: String?
+      attr_reader unassigned_numbers: Array[String]
+      attr_reader failed: Array[CampaignUnassignFailure]
+      def self.build: (untyped payload) -> NumbersMessagingCampaignUnassignData?
+    end
+
+    class NumbersListData
+      attr_reader numbers: Array[NumberDetail]
+      def self.build: (untyped payload) -> NumbersListData?
+    end
+
+    class NumbersMessagingListData
+      attr_reader numbers: Array[NumberMessagingState]
+      def self.build: (untyped payload) -> NumbersMessagingListData?
+    end
+
+    class PortOutPinUpdateData
+      attr_reader number: String
+      attr_reader port_out_pin: String
+      attr_reader changed: bool
+      def self.build: (untyped payload) -> PortOutPinUpdateData?
+    end
+
+    # ---- support ----
+
+    class TicketCreateRequest
+      attr_reader subject: String
+      attr_reader message: String
+      attr_reader email: String?
+      def initialize: (subject: String, message: String, email: String?) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class TicketUpdateRequest
+      attr_reader status: String
+      def initialize: (status: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class TicketReplyRequest
+      attr_reader message: String
+      def initialize: (message: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class TicketSource
+      attr_reader via: String?
+      attr_reader type: String?
+      def self.build: (untyped payload) -> TicketSource?
+    end
+
+    class TicketAction
+      attr_reader text: String?
+      attr_reader type: String?
+      def self.build: (untyped payload) -> TicketAction?
+    end
+
+    class TicketActor
+      attr_reader id: Integer?
+      attr_reader type: String?
+      attr_reader email: String?
+      attr_reader first_name: String?
+      attr_reader last_name: String?
+      attr_reader photo_url: String?
+      def self.build: (untyped payload) -> TicketActor?
+    end
+
+    class CustomFieldValue
+      attr_reader id: Integer?
+      attr_reader value: String?
+      attr_reader text: String?
+      def self.build: (untyped payload) -> CustomFieldValue?
+    end
+
+    class CustomerContactEntry
+      attr_reader id: Integer?
+      attr_reader value: String?
+      attr_reader type: String?
+      def self.build: (untyped payload) -> CustomerContactEntry?
+    end
+
+    class CustomerWebsiteEntry
+      attr_reader id: Integer?
+      attr_reader value: String?
+      def self.build: (untyped payload) -> CustomerWebsiteEntry?
+    end
+
+    class CustomerAddress
+      attr_reader street: String?
+      attr_reader city: String?
+      attr_reader state: String?
+      attr_reader country: String?
+      attr_reader zip: String?
+      def self.build: (untyped payload) -> CustomerAddress?
+    end
+
+    class CustomerEmbedded
+      attr_reader address: CustomerAddress?
+      attr_reader emails: Array[CustomerContactEntry]?
+      attr_reader phones: Array[CustomerContactEntry]?
+      attr_reader social_profiles: Array[CustomerContactEntry]?
+      attr_reader websites: Array[CustomerWebsiteEntry]?
+      def self.build: (untyped payload) -> CustomerEmbedded?
+    end
+
+    class SupportAttachment
+      attr_reader id: Integer?
+      attr_reader mime_type: String?
+      attr_reader file_name: String?
+      attr_reader file_url: String?
+      attr_reader size: Integer?
+      def self.build: (untyped payload) -> SupportAttachment?
+    end
+
+    class ThreadEmbedded
+      attr_reader attachments: Array[SupportAttachment]?
+      def self.build: (untyped payload) -> ThreadEmbedded?
+    end
+
+    class ConversationEmbedded
+      attr_reader threads: Array[SupportThread]?
+      def self.build: (untyped payload) -> ConversationEmbedded?
+    end
+
+    class SupportCustomer
+      attr_reader id: Integer?
+      attr_reader first_name: String?
+      attr_reader last_name: String?
+      attr_reader email: String?
+      attr_reader company: String?
+      attr_reader job_title: String?
+      attr_reader photo_type: String?
+      attr_reader photo_url: String?
+      attr_reader notes: String?
+      attr_reader type: String?
+      attr_reader created_at: String?
+      attr_reader updated_at: String?
+      attr_reader embedded: CustomerEmbedded?
+      def self.build: (untyped payload) -> SupportCustomer?
+    end
+
+    class SupportThread
+      attr_reader id: Integer?
+      attr_reader status: String
+      attr_reader state: String?
+      attr_reader type: String?
+      attr_reader body: String?
+      attr_reader rating: Integer?
+      attr_reader rating_comment: String?
+      attr_reader opened_at: String?
+      attr_reader created_at: String?
+      attr_reader source: TicketSource?
+      attr_reader action: TicketAction?
+      attr_reader created_by: TicketActor?
+      attr_reader assigned_to: TicketActor?
+      attr_reader customer: SupportCustomer?
+      attr_reader to: Array[String]?
+      attr_reader cc: Array[String]?
+      attr_reader bcc: Array[String]?
+      attr_reader embedded: ThreadEmbedded?
+      def self.build: (untyped payload) -> SupportThread?
+    end
+
+    class SupportConversation
+      attr_reader id: Integer?
+      attr_reader ticket_number: Integer?
+      attr_reader status: String
+      attr_reader state: String?
+      attr_reader subject: String?
+      attr_reader preview: String?
+      attr_reader type: String?
+      attr_reader mailbox_id: Integer?
+      attr_reader folder_id: Integer?
+      attr_reader threads_count: Integer?
+      attr_reader closed_by: Integer?
+      attr_reader closed_at: String?
+      attr_reader created_at: String?
+      attr_reader updated_at: String?
+      attr_reader user_updated_at: String?
+      attr_reader customer_waiting_since: Hash[untyped, untyped]?
+      attr_reader source: TicketSource?
+      attr_reader created_by: TicketActor?
+      attr_reader assignee: TicketActor?
+      attr_reader closed_by_user: TicketActor?
+      attr_reader customer: SupportCustomer?
+      attr_reader cc: Array[String]?
+      attr_reader bcc: Array[String]?
+      attr_reader custom_fields: Array[CustomFieldValue]?
+      attr_reader embedded: ConversationEmbedded?
+      def self.build: (untyped payload) -> SupportConversation?
+    end
+
+    class TicketData
+      attr_reader ticket: SupportConversation
+      def self.build: (untyped payload) -> TicketData?
+    end
+
+    class TicketsListData
+      attr_reader tickets: Array[SupportConversation]
+      def self.build: (untyped payload) -> TicketsListData?
+    end
+
+    class TicketThreadsData
+      attr_reader messages: Array[SupportThread]
+      def self.build: (untyped payload) -> TicketThreadsData?
+    end
+
+    class TicketReplyData
+      attr_reader message: String
+      def self.build: (untyped payload) -> TicketReplyData?
+    end
+
+    class TicketUpdateData
+      attr_reader id: Integer?
+      attr_reader status: String
+      def self.build: (untyped payload) -> TicketUpdateData?
+    end
   end
 
   module Internal
@@ -66,117 +1238,118 @@ module VoiceTel
     class Base
       def initialize: (Internal::Transport transport) -> void
       def compact_query: (Hash[untyped, untyped]) -> Hash[untyped, untyped]
+      def payload: (untyped body) -> untyped
     end
 
     class Account < Base
-      def get: () -> untyped
-      def update: (untyped body) -> untyped
-      def add: (untyped body) -> untyped
-      def signup: (untyped body) -> untyped
-      def cdr: (?start: untyped?, ?end_at: untyped?) -> untyped
-      def credits: () -> untyped
-      def recurring_charges: () -> untyped
-      def payments: () -> untyped
-      def registration: () -> untyped
-      def recover: (untyped body) -> untyped
+      def get: () -> Models::AccountData
+      def update: (untyped body) -> Models::AccountPutData
+      def add: (untyped body) -> Models::AccountAddData
+      def signup: (untyped body) -> Models::AccountSignupData
+      def cdr: (?start: untyped?, ?end_at: untyped?) -> Models::AccountCdrData
+      def credits: () -> Models::AccountCreditsData
+      def recurring_charges: () -> Models::AccountMrcData
+      def payments: () -> Models::AccountPaymentsData
+      def registration: () -> Models::AccountRegistrationData
+      def recover: (untyped body) -> Models::AccountRecoverData
     end
 
     class Acl < Base
-      def list: () -> untyped
-      def add: (untyped body) -> untyped
-      def remove: (untyped body) -> untyped
+      def list: () -> Models::AclListData
+      def add: (untyped body) -> Models::AclAddData
+      def remove: (untyped body) -> Models::AclRemoveData
     end
 
     class Authentication < Base
       AUTH_TYPE_DIGEST: Integer
+      AUTH_TYPE_LAX: Integer
       AUTH_TYPE_IP: Integer
-      AUTH_TYPE_DIGEST_OR_IP: Integer
-      AUTH_TYPE_DIGEST_AND_IP: Integer
+      AUTH_TYPE_STRICT: Integer
 
-      def get: () -> untyped
-      def update: (untyped body) -> untyped
+      def get: () -> Models::AuthGetData
+      def update: (untyped body) -> Models::AuthPutData
     end
 
     class E911 < Base
-      def list: () -> untyped
-      def create: (untyped body) -> untyped
-      def validate: (untyped body) -> untyped
-      def get: (String dn) -> untyped
-      def provision: (String dn, untyped body) -> untyped
-      def remove: (String dn) -> untyped
+      def list: () -> Models::E911AllData
+      def create: (untyped body) -> Models::E911RecordData
+      def validate: (untyped body) -> Models::E911ValidateData
+      def get: (String dn) -> Models::E911RecordData
+      def provision: (String dn, untyped body) -> Models::E911RecordData
+      def remove: (String dn) -> nil
     end
 
     class Gateways < Base
-      def list: () -> untyped
-      def add: (untyped body) -> untyped
-      def get: (Integer id) -> untyped
-      def update: (Integer id, untyped body) -> untyped
-      def remove: (Integer id) -> untyped
-      def numbers: (Integer id) -> untyped
+      def list: () -> Models::GatewaysListData
+      def add: (untyped body) -> Models::GatewayEntry
+      def get: (Integer id) -> Models::GatewayEntry
+      def update: (Integer id, untyped body) -> Models::GatewayEntry
+      def remove: (Integer id) -> nil
+      def numbers: (Integer id) -> Models::GatewayNumbersData
     end
 
     class INumbering < Base
       def search_inventory: (
         ?npa: Integer?, ?nxx: Integer?, ?state: String?, ?ratecenter: String?,
         ?contains: String?, ?endswith: String?, ?limit: Integer?
-      ) -> untyped
-      def coverage: (?state: String?, ?ratecenter: String?) -> untyped
-      def order: (untyped body) -> untyped
-      def ports: () -> untyped
-      def port: (Integer id) -> untyped
-      def submit_port: (untyped body) -> untyped
-      def port_availability: (String number) -> untyped
+      ) -> Models::InventorySearchData
+      def coverage: (?state: String?, ?ratecenter: String?) -> Models::InventoryCoverageData
+      def order: (untyped body) -> Models::OrderCreateData
+      def ports: () -> Models::PortListData
+      def port: (Integer id) -> Models::PortDetailData
+      def submit_port: (untyped body) -> Models::PortSubmitData
+      def port_availability: (String number) -> Models::PortAvailabilityData
     end
 
     class Lookups < Base
-      def cnam: (String number) -> untyped
-      def lrn: (String number, String ani) -> untyped
+      def cnam: (String number) -> Models::CnamData
+      def lrn: (String number, String ani) -> Models::LrnLookupData
     end
 
     class Messaging < Base
-      def history: (?number: String?, ?start: Integer?, ?end_at: Integer?, ?type: String?) -> untyped
-      def send_message: (untyped body) -> untyped
-      def create_brand: (untyped body) -> untyped
-      def campaign_status: () -> untyped
-      def create_campaign: (untyped body) -> untyped
-      def numbers_state: (?numbers: Array[String]?) -> untyped
+      def history: (?number: String?, ?start: Integer?, ?end_at: Integer?, ?type: String?) -> Models::MessageHistoryData
+      def send_message: (untyped body) -> Models::MessageSendData
+      def create_brand: (untyped body) -> Models::MessagingBrandCreateData
+      def campaign_status: () -> Models::MessagingCampaignStatusData
+      def create_campaign: (untyped body) -> Models::MessagingCampaignCreateData
+      def numbers_state: (?numbers: Array[String]?) -> Models::NumbersMessagingListData
     end
 
     class Numbers < Base
-      def list: () -> untyped
-      def add: (untyped body) -> untyped
-      def get: (String number) -> untyped
-      def remove: (String number) -> untyped
-      def move: (String number, untyped body) -> untyped
-      def release: (String number) -> untyped
-      def set_route: (String number, untyped body) -> untyped
-      def set_translation: (String number, untyped body) -> untyped
-      def set_cnam: (String number, untyped body) -> untyped
-      def set_lidb: (String number, untyped body) -> untyped
-      def get_fax: (String number) -> untyped
-      def set_fax: (String number, untyped body) -> untyped
-      def remove_fax: (String number) -> untyped
-      def set_forward: (String number, untyped body) -> untyped
-      def remove_forward: (String number) -> untyped
-      def get_sms: (String number) -> untyped
-      def set_sms: (String number, untyped body) -> untyped
-      def remove_sms: (String number) -> untyped
-      def get_messaging: (String number) -> untyped
-      def patch_messaging: (String number, untyped body) -> untyped
-      def assign_campaign: (String number, untyped body) -> untyped
-      def unassign_campaign: (String number) -> untyped
-      def bulk_unassign_campaign: (Array[String] numbers) -> untyped
-      def set_port_out_pin: (String number, untyped body) -> untyped
+      def list: () -> Models::NumbersListData
+      def add: (untyped body) -> Models::NumberAddData
+      def get: (String number) -> Models::NumberDetail
+      def remove: (String number) -> nil
+      def move: (String number, untyped body) -> Models::NumberMoveData
+      def release: (String number) -> nil
+      def set_route: (String number, untyped body) -> Models::NumberRouteData
+      def set_translation: (String number, untyped body) -> Models::NumberTranslationData
+      def set_cnam: (String number, untyped body) -> Models::NumberCnamData
+      def set_lidb: (String number, untyped body) -> Models::NumberLidbData
+      def get_fax: (String number) -> Models::NumberFaxData
+      def set_fax: (String number, untyped body) -> Models::NumberFaxData
+      def remove_fax: (String number) -> nil
+      def set_forward: (String number, untyped body) -> Models::NumberForwardData
+      def remove_forward: (String number) -> nil
+      def get_sms: (String number) -> Models::NumberSmsData
+      def set_sms: (String number, untyped body) -> Models::NumberSmsData
+      def remove_sms: (String number) -> nil
+      def get_messaging: (String number) -> Models::NumberMessagingState
+      def patch_messaging: (String number, untyped body) -> Models::NumberMessagingPatchData
+      def assign_campaign: (String number, untyped body) -> Models::NumberMessagingCampaignAssignData
+      def unassign_campaign: (String number) -> Models::NumberMessagingCampaignUnassignData
+      def bulk_unassign_campaign: (Array[String] numbers) -> Models::NumbersMessagingCampaignUnassignData
+      def set_port_out_pin: (String number, untyped body) -> Models::PortOutPinUpdateData
     end
 
     class Support < Base
-      def list: () -> untyped
-      def create: (untyped body) -> untyped
-      def get: (Integer id) -> untyped
-      def update: (Integer id, untyped body) -> untyped
-      def delete: (Integer id) -> untyped
-      def messages: (Integer id) -> untyped
-      def reply: (Integer id, untyped body) -> untyped
+      def list: () -> Models::TicketsListData
+      def create: (untyped body) -> Models::TicketData
+      def get: (Integer id) -> Models::TicketData
+      def update: (Integer id, untyped body) -> Models::TicketUpdateData
+      def delete: (Integer id) -> nil
+      def messages: (Integer id) -> Models::TicketThreadsData
+      def reply: (Integer id, untyped body) -> Models::TicketReplyData
     end
   end
 

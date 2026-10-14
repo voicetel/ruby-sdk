@@ -33,8 +33,8 @@ module SpecHelpers
   BASE_URL = "https://api.voicetel.com"
   API_KEY = "f" * 32
 
-  def new_client(api_key: API_KEY, **kwargs)
-    VoiceTel::Client.new(api_key: api_key, base_url: BASE_URL, max_retries: 0, **kwargs)
+  def new_client(api_key: API_KEY, **)
+    VoiceTel::Client.new(api_key: api_key, base_url: BASE_URL, max_retries: 0, **)
   end
 
   def envelope(data)

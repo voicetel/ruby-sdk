@@ -2,6 +2,7 @@
 
 require_relative "voicetel/version"
 require_relative "voicetel/api_error"
+require_relative "voicetel/models"
 require_relative "voicetel/internal/transport"
 require_relative "voicetel/resources/account"
 require_relative "voicetel/resources/acl"

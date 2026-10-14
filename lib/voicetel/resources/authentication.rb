@@ -6,19 +6,26 @@ module VoiceTel
   module Resources
     # AuthenticationService — SIP/HTTP authentication settings (mode + password).
     #
-    # auth_type values: 0 = Digest, 1 = IP Auth, 2 = Digest OR IP, 3 = Digest AND IP.
+    # auth_type values: 0=Digest, 1=Lax (Digest | IP), 2=IP, 3=Strict
+    # (Digest + IP).
     class Authentication < Base
-      AUTH_TYPE_DIGEST         = 0
-      AUTH_TYPE_IP             = 1
-      AUTH_TYPE_DIGEST_OR_IP   = 2
-      AUTH_TYPE_DIGEST_AND_IP  = 3
+      AUTH_TYPE_DIGEST = 0
+      AUTH_TYPE_LAX    = 1
+      AUTH_TYPE_IP     = 2
+      AUTH_TYPE_STRICT = 3
 
+      # GET /v2.2/auth — the active auth mode.
+      #
+      # @return [Models::AuthGetData]
       def get
-        @transport.request(:get, "/v2.2/auth")
+        Models::AuthGetData.build(@transport.request(:get, "/v2.2/auth"))
       end
 
+      # PUT /v2.2/auth — update the auth mode and/or password.
+      #
+      # @return [Models::AuthPutData]
       def update(body)
-        @transport.request(:put, "/v2.2/auth", body: body)
+        Models::AuthPutData.build(@transport.request(:put, "/v2.2/auth", body: payload(body)))
       end
     end
   end
