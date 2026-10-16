@@ -2,7 +2,7 @@
 
 The official Ruby client for the [VoiceTel REST API](https://voicetel.com/docs/api/v2.2/) — provision numbers, place orders, validate e911, send messages, and manage your account, all with idiomatic Ruby, structured errors, and zero codegen footprint.
 
-![Version](https://img.shields.io/badge/version-2.2.14-blue)
+![Version](https://img.shields.io/badge/version-2.2.15-blue)
 ![Ruby](https://img.shields.io/badge/ruby-3.2%2B-red)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25-brightgreen)
@@ -43,7 +43,7 @@ The official Ruby client for the [VoiceTel REST API](https://voicetel.com/docs/a
 - **Account** — profile, sub-accounts, CDRs, credits, payments, MRC, registration, password recovery.
 - **e911** — record provisioning, address validation, lookup, removal.
 - **Gateways** — list, create, update, delete, view bound numbers.
-- **Messaging** — SMS & MMS sending, message history, 10DLC brand and campaign registration, per-number messaging state.
+- **Messaging** — SMS & MMS sending, message history, 10DLC brand and campaign registration, per-number messaging state, and messaging health (account overview, per-number live check, spam-blocked samples, alert-email setting).
 - **Lookups** — CNAM and LRN dips.
 - **iNumbering** — inventory search, coverage queries, number orders, port-in submissions, port-out availability checks (v2.2.10 LRN + rate-center tier fields).
 - **Support** — ticket create / read / update / delete, threaded messages, replies.
@@ -64,7 +64,7 @@ gem install voicetel
 Or in your `Gemfile`:
 
 ```ruby
-gem "voicetel", "~> 2.2.14"
+gem "voicetel", "~> 2.2.15"
 ```
 
 Requires Ruby 3.2 or later. Tested on 3.2, 3.3, and 3.4.
@@ -124,7 +124,7 @@ key = client.login(username: 1_000_000_001, password: "hunter2")
 | `client.gateways` | Termination routes | `client.gateways.list` |
 | `client.i_numbering` | Inventory, orders, port-ins | `client.i_numbering.search_inventory(npa: 201)` |
 | `client.lookups` | CNAM & LRN dips | `client.lookups.lrn("2015550123", "2015550100")` |
-| `client.messaging` | SMS/MMS, 10DLC brands & campaigns | `client.messaging.send_message(from_number: "...", to_number: "...", text: "...")` |
+| `client.messaging` | SMS/MMS, 10DLC brands & campaigns, messaging health | `client.messaging.send_message(from_number: "...", to_number: "...", text: "...")` |
 | `client.numbers` | All operations on TNs on the account | `client.numbers.assign_campaign("2015550123", campaign_id: "CABC123")` |
 | `client.support` | Tickets, replies, attachments | `client.support.create(subject: "...", message: "...")` |
 
@@ -178,7 +178,7 @@ end
 
 These endpoints are limited to **6 requests per hour per IP**:
 
-- `account/info` (`client.account.get`)
+- `account` (`client.account.get`)
 - `account/cdr` (`client.account.cdr`)
 - `account/recurring-charges` (`client.account.recurring_charges`)
 - `account/payments` (`client.account.payments`)

@@ -69,6 +69,73 @@ module VoiceTel
         )
         Models::NumbersMessagingListData.build(@transport.request(:get, "/v2.2/numbers/messaging", query: q))
       end
+
+      # GET /v2.2/messaging/health — account-wide messaging health overview.
+      #
+      # Mirrors the portal Messaging tab: summary counts (numbers, messaging on,
+      # healthy, needing attention, in progress), campaigns with carrier-review
+      # progress, numbers needing attention (each with a plain-language title,
+      # detail and the actions that fix it), 14 days of delivery counts, and the
+      # alert-email setting. Updated hourly.
+      #
+      # The spec defines no response schema for this endpoint, so the unwrapped
+      # JSON payload is returned verbatim as a raw Hash (no typed model).
+      #
+      # @return [Hash]
+      def health
+        @transport.request(:get, "/v2.2/messaging/health")
+      end
+
+      # GET /v2.2/messaging/health/alerts — the alert-email setting: whether new
+      # messaging problems are emailed to the account.
+      #
+      # The spec defines no response schema, so the unwrapped payload is returned
+      # verbatim as a raw Hash.
+      #
+      # @return [Hash]
+      def health_alerts
+        @transport.request(:get, "/v2.2/messaging/health/alerts")
+      end
+
+      # PUT /v2.2/messaging/health/alerts — turn alert emails on or off. When
+      # enabled, the account is emailed as new messaging problems are found (at
+      # most one digest about every 20 hours).
+      #
+      # The spec defines no response schema, so the unwrapped payload is returned
+      # verbatim as a raw Hash.
+      #
+      # @param enabled [Boolean]
+      # @return [Hash]
+      def set_health_alerts(enabled:)
+        @transport.request(:put, "/v2.2/messaging/health/alerts", body: { enabled: enabled })
+      end
+
+      # POST /v2.2/messaging/health/check — live health check of one number: in
+      # service, messaging enabled, campaign approved, assigned to the campaign by
+      # the messaging provider, delivery failures in the last 24 hours, and
+      # enablement in progress. Limited to 30 checks per hour per account.
+      #
+      # The spec defines no response schema, so the unwrapped payload is returned
+      # verbatim as a raw Hash.
+      #
+      # @param number [String] 10-digit number on the account
+      # @return [Hash]
+      def health_check(number:)
+        @transport.request(:post, "/v2.2/messaging/health/check", body: { number: number })
+      end
+
+      # GET /v2.2/messaging/health/samples — up to 3 recent outbound messages from
+      # the number that carriers blocked as spam (time, masked recipient, text,
+      # reason), to help review content.
+      #
+      # The spec defines no response schema, so the unwrapped payload is returned
+      # verbatim (raw Hash or Array).
+      #
+      # @param number [String] 10-digit number on the account
+      # @return [Hash, Array]
+      def health_samples(number:)
+        @transport.request(:get, "/v2.2/messaging/health/samples", query: { number: number })
+      end
     end
   end
 end

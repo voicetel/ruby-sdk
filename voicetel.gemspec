@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["VoiceTel"]
   spec.email         = ["support@voicetel.com"]
 
-  spec.summary       = "Official Ruby SDK for the VoiceTel REST API (v2.2.14)."
+  spec.summary       = "Official Ruby SDK for the VoiceTel REST API (v2.2.15)."
   spec.description   = "Idiomatic Ruby client for the VoiceTel REST API: provision numbers, " \
                        "place orders, validate e911, send SMS/MMS, manage 10DLC campaigns, and " \
                        "run support tickets, all with typed Data models, structured errors, and " \

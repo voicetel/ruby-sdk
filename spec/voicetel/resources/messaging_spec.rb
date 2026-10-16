@@ -132,6 +132,43 @@ RSpec.describe VoiceTel::Resources::Messaging do
     client.messaging.numbers_state(numbers: %w[2015550123 2015551235])
   end
 
+  # v2.2.15: messaging-health endpoints have no response schema in the spec, so the
+  # SDK returns the unwrapped JSON payload verbatim (a raw Hash), not a typed model.
+  it "GETs health and returns the raw payload" do
+    stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/messaging/health")
+      .to_return(status: 200, body: envelope(summary: { numbers: 3, healthy: 2 }))
+    result = client.messaging.health
+    expect(result).to be_a(Hash)
+    expect(result["summary"]["numbers"]).to eq(3)
+  end
+
+  it "GETs and PUTs the health alert-email setting" do
+    stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/messaging/health/alerts")
+      .to_return(status: 200, body: envelope(enabled: true))
+    stub_request(:put, "#{SpecHelpers::BASE_URL}/v2.2/messaging/health/alerts")
+      .with(body: { enabled: false }.to_json)
+      .to_return(status: 200, body: envelope(enabled: false))
+    expect(client.messaging.health_alerts["enabled"]).to be(true)
+    expect(client.messaging.set_health_alerts(enabled: false)["enabled"]).to be(false)
+  end
+
+  it "POSTs health_check for one number" do
+    stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/messaging/health/check")
+      .with(body: { number: "2125550123" }.to_json)
+      .to_return(status: 200, body: envelope(number: "2125550123", inService: true))
+    result = client.messaging.health_check(number: "2125550123")
+    expect(result).to be_a(Hash)
+    expect(result["inService"]).to be(true)
+  end
+
+  it "GETs health_samples with the number query param" do
+    stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/messaging/health/samples")
+      .with(query: { number: "2125550123" })
+      .to_return(status: 200, body: envelope(samples: [{ reason: "spam" }]))
+    result = client.messaging.health_samples(number: "2125550123")
+    expect(result["samples"].first["reason"]).to eq("spam")
+  end
+
   it "raises on 429 (rate-limited)" do
     stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/messages")
       .to_return(status: 429, body: { message: "rate limit" }.to_json)
