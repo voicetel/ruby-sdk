@@ -11,7 +11,9 @@ module VoiceTel
       include Request
     end
 
-    # Per-number routing override inside OrderCreateRequest.
+    # Per-number routing override inside OrderCreateRequest. route is the
+    # global route type for numbers in this order: 1 USER, 2 T30,
+    # 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE.
     OrderNumberSpec = Data.define(:number, :route) do
       include Request
     end

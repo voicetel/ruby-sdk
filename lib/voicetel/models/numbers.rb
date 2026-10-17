@@ -5,12 +5,16 @@ require_relative "base"
 module VoiceTel
   module Models
     # ------------------------------------------------------------- requests ---
-    # Body for POST /v2.2/numbers.
+    # Body for POST /v2.2/numbers. route is the global route type: 1 USER,
+    # 2 T30, 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN,
+    # 9 MOBILE.
     NumberAddRequest = Data.define(:number, :route) do
       include Request
     end
 
-    # Body for PUT /v2.2/numbers/{number}/route.
+    # Body for PUT /v2.2/numbers/{number}/route. route is the global route
+    # type: 1 USER, 2 T30, 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML,
+    # 8 SDN, 9 MOBILE.
     NumberRouteRequest = Data.define(:route) do
       include Request
     end
@@ -61,7 +65,9 @@ module VoiceTel
       include Request
     end
 
-    # Body for PATCH /v2.2/numbers/{number} — move to another account.
+    # Body for PATCH /v2.2/numbers/{number} — move to another account. route
+    # is the global route type on the destination account: 1 USER, 2 T30,
+    # 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE.
     NumberMoveRequest = Data.define(:account_id, :route) do
       include Request
     end
@@ -73,7 +79,9 @@ module VoiceTel
 
     # ------------------------------------------------- entities & data ---
     # Per-number routing / feature state. Returned by GET /v2.2/numbers and
-    # GET /v2.2/numbers/{number}.
+    # GET /v2.2/numbers/{number}. route is the global route type: 1 USER,
+    # 2 T30, 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN,
+    # 9 MOBILE.
     NumberDetail = Data.define(
       :number, :translated, :route, :gateway, :cnam, :forward, :forward_to, :carrier,
       :sms_enabled, :fax_enabled
@@ -114,7 +122,9 @@ module VoiceTel
       end
     end
 
-    # Data payload from POST /v2.2/numbers.
+    # Data payload from POST /v2.2/numbers. route is the global route type
+    # that was installed: 1 USER, 2 T30, 3 VOICE_BRIDGE, 4 DID (default),
+    # 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE.
     NumberAddData = Data.define(:number, :route) do
       extend Base
     end
@@ -145,12 +155,16 @@ module VoiceTel
       extend Base
     end
 
-    # Data payload from PATCH /v2.2/numbers/{number}.
+    # Data payload from PATCH /v2.2/numbers/{number}. route is the global
+    # route type on the destination account: 1 USER, 2 T30, 3 VOICE_BRIDGE,
+    # 4 DID (default), 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE.
     NumberMoveData = Data.define(:number, :account_id, :route) do
       extend Base
     end
 
-    # Data payload from PUT /v2.2/numbers/{number}/route.
+    # Data payload from PUT /v2.2/numbers/{number}/route. route echoes the
+    # applied global route type: 1 USER, 2 T30, 3 VOICE_BRIDGE, 4 DID
+    # (default), 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE.
     NumberRouteData = Data.define(:number, :route) do
       extend Base
     end

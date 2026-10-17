@@ -2,7 +2,7 @@
 
 The official Ruby client for the [VoiceTel REST API](https://voicetel.com/docs/api/v2.2/) — provision numbers, place orders, validate e911, send messages, and manage your account, all with idiomatic Ruby, structured errors, and zero codegen footprint.
 
-![Version](https://img.shields.io/badge/version-2.2.16-blue)
+![Version](https://img.shields.io/badge/version-2.2.17-blue)
 ![Ruby](https://img.shields.io/badge/ruby-3.2%2B-red)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25-brightgreen)
@@ -64,7 +64,7 @@ gem install voicetel
 Or in your `Gemfile`:
 
 ```ruby
-gem "voicetel", "~> 2.2.16"
+gem "voicetel", "~> 2.2.17"
 ```
 
 Requires Ruby 3.2 or later. Tested on 3.2, 3.3, and 3.4.

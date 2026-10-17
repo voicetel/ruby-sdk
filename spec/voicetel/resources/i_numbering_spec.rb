@@ -40,11 +40,11 @@ RSpec.describe VoiceTel::Resources::INumbering do
 
   it "serializes OrderNumberSpec entries inside an order body" do
     stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/orders")
-      .with(body: { numbers: [{ number: "2015550123", route: 7 }] }.to_json)
+      .with(body: { numbers: [{ number: "2015550123", route: 4 }] }.to_json)
       .to_return(status: 200, body: envelope(orderId: "O124", amountCharged: 1.25,
                                              numbersOrdered: ["2015550123"]))
     client.i_numbering.order(
-      numbers: [VoiceTel::Models::OrderNumberSpec.new(number: "2015550123", route: 7)]
+      numbers: [VoiceTel::Models::OrderNumberSpec.new(number: "2015550123", route: 4)]
     )
   end
 

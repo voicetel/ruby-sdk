@@ -78,12 +78,12 @@ RSpec.describe VoiceTel::Models do
       request = described_class::OrderCreateRequest.new(
         numbers: [
           "2015550123",
-          described_class::OrderNumberSpec.new(number: "2015551235", route: 7),
+          described_class::OrderNumberSpec.new(number: "2015551235", route: 4),
           { number: "2015551236", route: 8 }
         ]
       )
       expect(request.to_payload).to eq(
-        { numbers: ["2015550123", { number: "2015551235", route: 7 }, { number: "2015551236", route: 8 }] }
+        { numbers: ["2015550123", { number: "2015551235", route: 4 }, { number: "2015551236", route: 8 }] }
       )
     end
   end
