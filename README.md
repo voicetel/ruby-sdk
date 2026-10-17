@@ -2,7 +2,7 @@
 
 The official Ruby client for the [VoiceTel REST API](https://voicetel.com/docs/api/v2.2/) — provision numbers, place orders, validate e911, send messages, and manage your account, all with idiomatic Ruby, structured errors, and zero codegen footprint.
 
-![Version](https://img.shields.io/badge/version-2.2.15-blue)
+![Version](https://img.shields.io/badge/version-2.2.16-blue)
 ![Ruby](https://img.shields.io/badge/ruby-3.2%2B-red)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25-brightgreen)
@@ -33,7 +33,7 @@ The official Ruby client for the [VoiceTel REST API](https://voicetel.com/docs/a
 
 ### 🔁 Production-Grade Transport
 - **Faraday 2.x** with connection pooling, persistent HTTP, and pluggable adapters.
-- **Automatic retry** on 429 / 5xx via `faraday-retry`, honoring `Retry-After`.
+- **Automatic retry** on 429 / 5xx via `faraday-retry`, honoring `Retry-After` (capped at 8s).
 - **Configurable timeouts** per client.
 - **Bearer auth** managed for you; password→key exchange handled by `client.login`.
 - **Structured ApiError** — `:rate_limit`, `:not_found`, `:conflict`, ... pattern-match on a Symbol, or call `err.rate_limit?`.
@@ -64,7 +64,7 @@ gem install voicetel
 Or in your `Gemfile`:
 
 ```ruby
-gem "voicetel", "~> 2.2.15"
+gem "voicetel", "~> 2.2.16"
 ```
 
 Requires Ruby 3.2 or later. Tested on 3.2, 3.3, and 3.4.
@@ -77,7 +77,7 @@ require "voicetel"
 client = VoiceTel::Client.new
 
 # Exchange username + password for an API key (one-time per session)
-client.login(username: 1_000_000_001, password: "hunter2")
+client.login(username: "1000000001", password: "hunter2")
 
 me = client.account.get
 puts "Balance: $#{me.cash}  |  Caller ID: #{me.caller_id}"
@@ -93,7 +93,7 @@ Or, if you already have an API key:
 ```ruby
 client = VoiceTel::Client.new(api_key: ENV.fetch("VOICETEL_API_KEY"))
 
-coverage = client.i_numbering.coverage(state: "NJ")
+coverage = client.i_numbering.coverage(count_by: "npanxx", npa: "201")
 coverage.coverage.each do |bucket|
   puts "#{bucket.npa}-#{bucket.nxx}: #{bucket.count} TNs available"
 end
@@ -109,7 +109,7 @@ Re-fetch the API key after any password change — the old one is invalidated.
 
 ```ruby
 client = VoiceTel::Client.new
-key = client.login(username: 1_000_000_001, password: "hunter2")
+key = client.login(username: "1000000001", password: "hunter2")
 # `key` is the freshly minted bearer; the client already has it installed.
 ```
 
@@ -122,7 +122,7 @@ key = client.login(username: 1_000_000_001, password: "hunter2")
 | `client.authentication` | SIP/HTTP auth mode + password | `client.authentication.update(auth_type: 1)` |
 | `client.e911` | Records, address validation, provisioning | `client.e911.validate(address1: "...", city: "...", state: "NJ", zip: "07101")` |
 | `client.gateways` | Termination routes | `client.gateways.list` |
-| `client.i_numbering` | Inventory, orders, port-ins | `client.i_numbering.search_inventory(npa: 201)` |
+| `client.i_numbering` | Inventory, orders, port-ins | `client.i_numbering.search_inventory(tn_mask: "201555*")` |
 | `client.lookups` | CNAM & LRN dips | `client.lookups.lrn("2015550123", "2015550100")` |
 | `client.messaging` | SMS/MMS, 10DLC brands & campaigns, messaging health | `client.messaging.send_message(from_number: "...", to_number: "...", text: "...")` |
 | `client.numbers` | All operations on TNs on the account | `client.numbers.assign_campaign("2015550123", campaign_id: "CABC123")` |
@@ -181,11 +181,11 @@ These endpoints are limited to **6 requests per hour per IP**:
 - `account` (`client.account.get`)
 - `account/cdr` (`client.account.cdr`)
 - `account/recurring-charges` (`client.account.recurring_charges`)
-- `account/payments` (`client.account.payments`)
-- `account/registration` (`client.account.registration`)
 - `account/api-key` (`client.login`)
 
-The SDK automatically retries 429 responses with `Retry-After` honored, up to `max_retries` (default `2`). To raise it:
+`POST /v2.2/messaging/health/check` is separately limited to **30 checks per hour per account**.
+
+The SDK automatically retries 429 responses with `Retry-After` honored (capped at 8s), up to `max_retries` (default `2`). To raise it:
 
 ```ruby
 VoiceTel::Client.new(api_key: key, max_retries: 4, timeout: 60)

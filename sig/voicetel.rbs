@@ -246,7 +246,6 @@ module VoiceTel
     class AccountRegistrationData
       attr_reader agent: String?
       attr_reader uri: String?
-      attr_reader expires: Integer?
       def self.build: (untyped payload) -> AccountRegistrationData?
     end
 
@@ -683,7 +682,7 @@ module VoiceTel
       attr_reader destination_number: String?
       attr_reader direction: String?
       attr_reader rate: String?
-      attr_reader number: Integer?
+      attr_reader number: String?
       attr_reader message: String?
       def self.build: (untyped payload) -> MessageRecordValue?
     end
@@ -1185,6 +1184,7 @@ module VoiceTel
     end
 
     class TicketsListData
+      attr_reader total_count: Integer?
       attr_reader tickets: Array[SupportConversation]
       def self.build: (untyped payload) -> TicketsListData?
     end
@@ -1209,12 +1209,15 @@ module VoiceTel
   module Internal
     class Transport
       RETRYABLE_STATUSES: Array[Integer]
+      MAX_RETRY_DELAY: Integer
 
       attr_reader base_url: String
       attr_reader user_agent: String
       attr_reader timeout: Integer | Float
       attr_reader max_retries: Integer
       attr_accessor api_key: String?
+
+      def self.retry_after_seconds: (untyped value) -> Float | Integer
 
       def initialize: (
         base_url: String?,
@@ -1238,6 +1241,7 @@ module VoiceTel
     class Base
       def initialize: (Internal::Transport transport) -> void
       def compact_query: (Hash[untyped, untyped]) -> Hash[untyped, untyped]
+      def escape_path: (untyped value) -> String
       def payload: (untyped body) -> untyped
     end
 
@@ -1247,7 +1251,7 @@ module VoiceTel
       def add: (untyped body) -> Models::AccountAddData
       def signup: (untyped body) -> Models::AccountSignupData
       def cdr: (?start: untyped?, ?end_at: untyped?) -> Models::AccountCdrData
-      def credits: () -> Models::AccountCreditsData
+      def credits: (?status: String?) -> Models::AccountCreditsData
       def recurring_charges: () -> Models::AccountMrcData
       def payments: () -> Models::AccountPaymentsData
       def registration: () -> Models::AccountRegistrationData
@@ -1257,7 +1261,7 @@ module VoiceTel
     class Acl < Base
       def list: () -> Models::AclListData
       def add: (untyped body) -> Models::AclAddData
-      def remove: (untyped body) -> Models::AclRemoveData
+      def remove: (cidrs: Array[String] | String) -> Models::AclRemoveData
     end
 
     class Authentication < Base
@@ -1290,13 +1294,16 @@ module VoiceTel
 
     class INumbering < Base
       def search_inventory: (
-        ?npa: Integer?, ?nxx: Integer?, ?state: String?, ?ratecenter: String?,
-        ?contains: String?, ?endswith: String?, ?limit: Integer?
+        tn_mask: String, ?quantity: Integer?, ?province: String?,
+        ?rate_center: String?, ?lata: Integer?
       ) -> Models::InventorySearchData
-      def coverage: (?state: String?, ?ratecenter: String?) -> Models::InventoryCoverageData
+      def coverage: (
+        count_by: String, ?loc_state: String?, ?city: String?,
+        ?rc_abbre: String?, ?npa: String?, ?lata: Integer?
+      ) -> Models::InventoryCoverageData
       def order: (untyped body) -> Models::OrderCreateData
       def ports: () -> Models::PortListData
-      def port: (Integer id) -> Models::PortDetailData
+      def port: (String id) -> Models::PortDetailData
       def submit_port: (untyped body) -> Models::PortSubmitData
       def port_availability: (String number) -> Models::PortAvailabilityData
     end
@@ -1307,12 +1314,12 @@ module VoiceTel
     end
 
     class Messaging < Base
-      def history: (?number: String?, ?start: Integer?, ?end_at: Integer?, ?type: String?) -> Models::MessageHistoryData
+      def history: (number: String, ?from: Integer?, ?to: Integer?, ?type: String?) -> Models::MessageHistoryData
       def send_message: (untyped body) -> Models::MessageSendData
       def create_brand: (untyped body) -> Models::MessagingBrandCreateData
-      def campaign_status: () -> Models::MessagingCampaignStatusData
+      def campaign_status: (ids: Array[String] | String) -> Models::MessagingCampaignStatusData
       def create_campaign: (untyped body) -> Models::MessagingCampaignCreateData
-      def numbers_state: (?numbers: Array[String]?) -> Models::NumbersMessagingListData
+      def numbers_state: (numbers: Array[String]) -> Models::NumbersMessagingListData
     end
 
     class Numbers < Base
@@ -1337,8 +1344,8 @@ module VoiceTel
       def get_messaging: (String number) -> Models::NumberMessagingState
       def patch_messaging: (String number, untyped body) -> Models::NumberMessagingPatchData
       def assign_campaign: (String number, untyped body) -> Models::NumberMessagingCampaignAssignData
-      def unassign_campaign: (String number) -> Models::NumberMessagingCampaignUnassignData
-      def bulk_unassign_campaign: (Array[String] numbers) -> Models::NumbersMessagingCampaignUnassignData
+      def unassign_campaign: (String number, campaign_id: String) -> Models::NumberMessagingCampaignUnassignData
+      def bulk_unassign_campaign: (numbers: Array[String], campaign_id: String) -> Models::NumbersMessagingCampaignUnassignData
       def set_port_out_pin: (String number, untyped body) -> Models::PortOutPinUpdateData
     end
 
@@ -1361,7 +1368,7 @@ module VoiceTel
       ?max_retries: Integer, ?user_agent: String?, ?adapter: Symbol?
     ) -> void
 
-    def login: (username: untyped, password: String) -> String
+    def login: (username: String, password: String) -> String
     def api_key: () -> String?
     def base_url: () -> String
 

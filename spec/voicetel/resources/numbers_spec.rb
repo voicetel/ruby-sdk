@@ -228,27 +228,28 @@ RSpec.describe VoiceTel::Resources::Numbers do
 
   it "unassigns a campaign (DELETE returns 200 + body, not 204)" do
     stub_request(:delete, "#{SpecHelpers::BASE_URL}/v2.2/numbers/2015550123/messaging-campaign")
+      .with(query: { campaignId: "CABC123" })
       .to_return(
         status: 200,
         body: envelope(number: "2015550123", campaignId: "CABC123", network: "B",
                        upstreamCnpId: "CAMP003", unassigned: true)
       )
-    result = client.numbers.unassign_campaign("2015550123")
+    result = client.numbers.unassign_campaign("2015550123", campaign_id: "CABC123")
     expect(result).to be_a(VoiceTel::Models::NumberMessagingCampaignUnassignData)
     expect(result.unassigned).to be(true)
     expect(result.network).to eq("B")
   end
 
-  it "bulk-unassigns campaigns (DELETE returns 200 + body)" do
+  it "bulk-unassigns campaigns (DELETE returns 200 + body, query params only)" do
     stub_request(:delete, "#{SpecHelpers::BASE_URL}/v2.2/numbers/messaging-campaign")
-      .with(body: { numbers: %w[2015550123 2015551235] }.to_json)
+      .with(query: { numbers: "2015550123,2015551235", campaignId: "CABC123" })
       .to_return(
         status: 200,
         body: envelope(campaignId: "CABC123", network: "B", upstreamCnpId: "CAMP003",
                        unassignedNumbers: %w[2015550123 2015551235],
                        failed: [{ number: "2015550199", reason: "not on account" }])
       )
-    result = client.numbers.bulk_unassign_campaign(%w[2015550123 2015551235])
+    result = client.numbers.bulk_unassign_campaign(numbers: %w[2015550123 2015551235], campaign_id: "CABC123")
     expect(result).to be_a(VoiceTel::Models::NumbersMessagingCampaignUnassignData)
     expect(result.unassigned_numbers).to eq(%w[2015550123 2015551235])
     expect(result.failed.first).to be_a(VoiceTel::Models::CampaignUnassignFailure)

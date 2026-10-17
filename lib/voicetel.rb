@@ -46,14 +46,16 @@ module VoiceTel
     end
 
     # Exchange username + password for a 32-hex API key and install it on
-    # this client. Shares the 6 req/hour/IP rate limit with the rest of the
-    # account/* endpoints.
+    # this client. Shares the 6 req/hour/IP rate limit with the other
+    # rate-limited account endpoints (account info, cdr, recurring-charges).
     #
+    # @param username [String] account username (a 10-digit string, e.g. "1000000001")
+    # @param password [String] account password
     # @return [String] the freshly exchanged bearer token
     def login(username:, password:)
       data = @transport.request(
         :post, "/v2.2/account/api-key",
-        body: { username: username, password: password },
+        body: { username: username.to_s, password: password },
         require_auth: false
       )
       key = data.is_a?(Hash) ? data["apikey"] : nil

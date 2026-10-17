@@ -5,24 +5,25 @@ RSpec.describe VoiceTel::Resources::INumbering do
 
   it "searches inventory with all filters" do
     stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/inventory")
-      .with(query: { npa: 201, nxx: 555, state: "NJ", ratecenter: "NEWARK", contains: "1212", endswith: "00", limit: 5 })
+      .with(query: { tnMask: "201555*", quantity: 5, province: "NJ", rateCenter: "NEWARK", lata: 224 })
       .to_return(status: 200, body: envelope(numbers: []))
-    expect(client.i_numbering.search_inventory(npa: 201, nxx: 555, state: "NJ", ratecenter: "NEWARK",
-                                               contains: "1212", endswith: "00", limit: 5))
+    expect(client.i_numbering.search_inventory(tn_mask: "201555*", quantity: 5, province: "NJ",
+                                               rate_center: "NEWARK", lata: 224))
       .to be_a(VoiceTel::Models::InventorySearchData)
   end
 
-  it "searches inventory with no filters" do
+  it "searches inventory with only the required tn_mask" do
     stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/inventory")
+      .with(query: { tnMask: "201" })
       .to_return(status: 200, body: envelope(numbers: []))
-    client.i_numbering.search_inventory
+    client.i_numbering.search_inventory(tn_mask: "201")
   end
 
   it "GETs coverage" do
     stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/inventory/coverage")
-      .with(query: { state: "NJ" })
+      .with(query: { countBy: "state", locState: "NJ" })
       .to_return(status: 200, body: envelope(coverage: []))
-    expect(client.i_numbering.coverage(state: "NJ")).to be_a(VoiceTel::Models::InventoryCoverageData)
+    expect(client.i_numbering.coverage(count_by: "state", loc_state: "NJ")).to be_a(VoiceTel::Models::InventoryCoverageData)
   end
 
   it "POSTs an order and reports the amount charged" do
@@ -67,7 +68,7 @@ RSpec.describe VoiceTel::Resources::INumbering do
       status: 200,
       body: envelope(port: { status: "Complete", id: "9", numbers: ["2015550123"] })
     )
-    result = client.i_numbering.port(9)
+    result = client.i_numbering.port("9")
     expect(result).to be_a(VoiceTel::Models::PortDetailData)
     expect(result.port).to be_a(VoiceTel::Models::PortDetail)
     expect(result.port).not_to respond_to(:support_url)
@@ -104,8 +105,8 @@ RSpec.describe VoiceTel::Resources::INumbering do
 
   it "raises on 400 invalid query" do
     stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/inventory")
-      .with(query: { npa: 99 })
-      .to_return(status: 400, body: { message: "bad npa" }.to_json)
-    expect { client.i_numbering.search_inventory(npa: 99) }.to raise_error(VoiceTel::ApiError) { |e| expect(e.bad_request?).to be(true) }
+      .with(query: { tnMask: "99" })
+      .to_return(status: 400, body: { status: "error", error: { code: 400, message: "bad tnMask" } }.to_json)
+    expect { client.i_numbering.search_inventory(tn_mask: "99") }.to raise_error(VoiceTel::ApiError) { |e| expect(e.bad_request?).to be(true) }
   end
 end

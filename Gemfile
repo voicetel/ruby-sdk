@@ -12,8 +12,9 @@ group :development, :test do
 end
 
 # RuboCop's transitive deps (parallel, public_suffix, ...) require Ruby 3.3+,
-# but the SDK itself supports Ruby 3.1+. Keep linting in its own group so the
-# 3.1 / 3.2 matrix legs can skip it via `bundle config set --local without "lint"`.
+# while the SDK itself requires only Ruby 3.2+ (Data models). Keep linting in
+# its own group so the 3.2 matrix leg can skip it via
+# `bundle config set --local without "lint"`.
 group :lint do
   gem "rubocop", "~> 1.91"
   gem "rubocop-rspec", "~> 3.10"

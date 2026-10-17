@@ -52,6 +52,14 @@ RSpec.describe VoiceTel::Resources::Account do
     expect(client.account.signup(name: "A", email: "a@b").username).to eq("u")
   end
 
+  it "POSTs signup without bearer auth on a keyless client" do
+    keyless = new_client(api_key: nil)
+    stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/accounts")
+      .with { |req| !req.headers.key?("Authorization") }
+      .to_return(status: 200, body: envelope(username: "u"))
+    expect(keyless.account.signup(name: "A", email: "a@b").username).to eq("u")
+  end
+
   it "passes start/end to GET /cdr as query params" do
     stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/account/cdr?start=1&end=2")
       .to_return(status: 200, body: envelope(cdr: [], start: 1, end: 2))
@@ -84,6 +92,13 @@ RSpec.describe VoiceTel::Resources::Account do
     stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/account/credits")
       .to_return(status: 200, body: envelope(credits: []))
     expect(client.account.credits).to be_a(VoiceTel::Models::AccountCreditsData)
+  end
+
+  it "GETs credits filtered by status" do
+    stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/account/credits")
+      .with(query: { status: "unpaid" })
+      .to_return(status: 200, body: envelope(credits: []))
+    expect(client.account.credits(status: "unpaid")).to be_a(VoiceTel::Models::AccountCreditsData)
   end
 
   it "GETs recurring_charges" do

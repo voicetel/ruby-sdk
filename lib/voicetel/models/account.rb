@@ -156,7 +156,7 @@ module VoiceTel
 
     # Data payload from GET /v2.2/account/registration — current SIP
     # registration.
-    AccountRegistrationData = Data.define(:agent, :uri, :expires) do
+    AccountRegistrationData = Data.define(:agent, :uri) do
       extend Base
     end
 

@@ -26,26 +26,26 @@ module VoiceTel
       #
       # @return [Models::GatewayEntry]
       def get(id)
-        Models::GatewayEntry.build(@transport.request(:get, "/v2.2/gateways/#{id}"))
+        Models::GatewayEntry.build(@transport.request(:get, "/v2.2/gateways/#{escape_path(id)}"))
       end
 
       # PUT /v2.2/gateways/{id} — update a gateway.
       #
       # @return [Models::GatewayEntry]
       def update(id, body)
-        Models::GatewayEntry.build(@transport.request(:put, "/v2.2/gateways/#{id}", body: payload(body)))
+        Models::GatewayEntry.build(@transport.request(:put, "/v2.2/gateways/#{escape_path(id)}", body: payload(body)))
       end
 
       # DELETE /v2.2/gateways/{id}. Returns nil on 204 No Content.
       def remove(id)
-        @transport.request(:delete, "/v2.2/gateways/#{id}")
+        @transport.request(:delete, "/v2.2/gateways/#{escape_path(id)}")
       end
 
       # GET /v2.2/gateways/{id}/numbers — numbers bound to a gateway.
       #
       # @return [Models::GatewayNumbersData]
       def numbers(id)
-        Models::GatewayNumbersData.build(@transport.request(:get, "/v2.2/gateways/#{id}/numbers"))
+        Models::GatewayNumbersData.build(@transport.request(:get, "/v2.2/gateways/#{escape_path(id)}/numbers"))
       end
     end
   end

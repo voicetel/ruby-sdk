@@ -30,7 +30,7 @@ module VoiceTel
       #
       # @return [Models::TicketData]
       def get(id)
-        Models::TicketData.build(@transport.request(:get, "/v2.2/support/tickets/#{id}"))
+        Models::TicketData.build(@transport.request(:get, "/v2.2/support/tickets/#{escape_path(id)}"))
       end
 
       # PUT /v2.2/support/tickets/{id} — update a ticket.
@@ -38,13 +38,13 @@ module VoiceTel
       # @return [Models::TicketUpdateData]
       def update(id, body)
         Models::TicketUpdateData.build(
-          @transport.request(:put, "/v2.2/support/tickets/#{id}", body: payload(body))
+          @transport.request(:put, "/v2.2/support/tickets/#{escape_path(id)}", body: payload(body))
         )
       end
 
       # DELETE /v2.2/support/tickets/{id}. Returns nil on 204 No Content.
       def delete(id)
-        @transport.request(:delete, "/v2.2/support/tickets/#{id}")
+        @transport.request(:delete, "/v2.2/support/tickets/#{escape_path(id)}")
       end
 
       # GET /v2.2/support/tickets/{id}/messages — the ticket's threads.
@@ -52,7 +52,7 @@ module VoiceTel
       # @return [Models::TicketThreadsData]
       def messages(id)
         Models::TicketThreadsData.build(
-          @transport.request(:get, "/v2.2/support/tickets/#{id}/messages")
+          @transport.request(:get, "/v2.2/support/tickets/#{escape_path(id)}/messages")
         )
       end
 
@@ -61,7 +61,7 @@ module VoiceTel
       # @return [Models::TicketReplyData]
       def reply(id, body)
         Models::TicketReplyData.build(
-          @transport.request(:post, "/v2.2/support/tickets/#{id}/replies", body: payload(body))
+          @transport.request(:post, "/v2.2/support/tickets/#{escape_path(id)}/replies", body: payload(body))
         )
       end
     end

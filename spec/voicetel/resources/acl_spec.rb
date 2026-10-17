@@ -29,11 +29,11 @@ RSpec.describe VoiceTel::Resources::Acl do
                    ))
   end
 
-  it "DELETEs CIDR entries (returns 200 with a body)" do
+  it "DELETEs CIDR entries via the cidrs query param (returns 200 with a body)" do
     stub_request(:delete, "#{SpecHelpers::BASE_URL}/v2.2/acl")
-      .with(body: { acl: [{ cidr: "1.2.3.0/24" }] }.to_json)
+      .with(query: { cidrs: "1.2.3.0/24" }) { |req| req.body.nil? || req.body.empty? }
       .to_return(status: 200, body: envelope(removed: [{ cidr: "1.2.3.0/24" }]))
-    result = client.acl.remove(acl: [{ cidr: "1.2.3.0/24" }])
+    result = client.acl.remove(cidrs: ["1.2.3.0/24"])
     expect(result.removed.first.cidr).to eq("1.2.3.0/24")
   end
 

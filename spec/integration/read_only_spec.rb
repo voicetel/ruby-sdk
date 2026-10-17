@@ -24,7 +24,7 @@ RSpec.describe VoiceTel::Client, :integration do
 
   it "logs in and reads the account profile" do
     client = described_class.new(base_url: base_url)
-    key = client.login(username: Integer(username), password: password)
+    key = client.login(username: username, password: password)
     expect(key).to match(/\A[a-f0-9]{32}\z/i)
 
     me = client.account.get
@@ -34,7 +34,7 @@ RSpec.describe VoiceTel::Client, :integration do
 
   it "lists numbers without raising" do
     client = described_class.new(base_url: base_url)
-    client.login(username: Integer(username), password: password)
+    client.login(username: username, password: password)
     result = client.numbers.list
     expect(result).to be_a(VoiceTel::Models::NumbersListData)
     expect(result.numbers).to be_an(Array)

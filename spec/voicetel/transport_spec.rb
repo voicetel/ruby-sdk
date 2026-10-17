@@ -94,19 +94,20 @@ RSpec.describe VoiceTel::Internal::Transport do
       expect(result).to eq("message" => "ok")
     end
 
-    it "raises an ApiError with the correct kind on 404" do
+    it "raises an ApiError with the correct kind on 404 (spec error envelope)" do
       stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/numbers/9999999999")
         .to_return(
           status: 404,
-          body: { code: "ENOENT", message: "no such number" }.to_json,
+          body: { status: "error", error: { code: 404, message: "no such number" } }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
 
       expect { transport.request(:get, "/v2.2/numbers/9999999999") }.to raise_error(VoiceTel::ApiError) do |e|
         expect(e.kind).to eq(:not_found)
         expect(e.status_code).to eq(404)
-        expect(e.code).to eq("ENOENT")
-        expect(e.body).to eq("code" => "ENOENT", "message" => "no such number")
+        expect(e.code).to eq(404)
+        expect(e.message).to eq("voicetel: HTTP 404: no such number")
+        expect(e.body).to eq("status" => "error", "error" => { "code" => 404, "message" => "no such number" })
       end
     end
 
@@ -141,6 +142,35 @@ RSpec.describe VoiceTel::Internal::Transport do
         .to_raise(Faraday::TimeoutError.new("execution expired"))
 
       expect { transport.request(:get, "/v2.2/anywhere") }.to raise_error(VoiceTel::ApiError, /timed out/)
+    end
+
+    it "wraps Faraday::SSLError into an ApiError" do
+      stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/anywhere")
+        .to_raise(Faraday::SSLError.new("certificate verify failed"))
+
+      expect { transport.request(:get, "/v2.2/anywhere") }.to raise_error(VoiceTel::ApiError, /SSL/)
+    end
+
+    it "wraps other Faraday::Error subclasses into an ApiError" do
+      stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/anywhere")
+        .to_raise(Faraday::Error.new("something broke"))
+
+      expect { transport.request(:get, "/v2.2/anywhere") }.to raise_error(VoiceTel::ApiError, /transport error/)
+    end
+
+    it "wraps a gzip decode failure into an ApiError" do
+      stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/anywhere")
+        .to_return(status: 200, body: "not-really-gzip", headers: { "Content-Encoding" => "gzip" })
+
+      expect { transport.request(:get, "/v2.2/anywhere") }.to raise_error(VoiceTel::ApiError, /gzip/)
+    end
+  end
+
+  describe ".retry_after_seconds" do
+    it "caps the honored Retry-After value at 8 seconds" do
+      expect(described_class.retry_after_seconds("3600")).to eq(8)
+      expect(described_class.retry_after_seconds("2")).to eq(2.0)
+      expect(described_class.retry_after_seconds(nil)).to eq(0.0)
     end
   end
 end

@@ -7,7 +7,7 @@ module VoiceTel
     # AccountService — Account tag in the OpenAPI spec.
     #
     # Rate-limited endpoints (6 req/hour/IP, shared with Client#login):
-    # `cdr`, `recurring_charges`, `payments`, `registration`, and `info`.
+    # `get` (account info), `cdr`, and `recurring_charges`.
     class Account < Base
       # GET /v2.2/account — the authenticated account profile.
       #
@@ -30,11 +30,13 @@ module VoiceTel
         Models::AccountAddData.build(@transport.request(:post, "/v2.2/account", body: payload(body)))
       end
 
-      # POST /v2.2/accounts — public sign-up flow.
+      # POST /v2.2/accounts — public sign-up flow. No auth required.
       #
       # @return [Models::AccountSignupData]
       def signup(body)
-        Models::AccountSignupData.build(@transport.request(:post, "/v2.2/accounts", body: payload(body)))
+        Models::AccountSignupData.build(
+          @transport.request(:post, "/v2.2/accounts", body: payload(body), require_auth: false)
+        )
       end
 
       # GET /v2.2/account/cdr — call detail records. Rate-limited.
@@ -47,9 +49,11 @@ module VoiceTel
 
       # GET /v2.2/account/credits — credit history.
       #
+      # @param status [String, nil] optional invoice-status filter: "paid" or "unpaid"
       # @return [Models::AccountCreditsData]
-      def credits
-        Models::AccountCreditsData.build(@transport.request(:get, "/v2.2/account/credits"))
+      def credits(status: nil)
+        q = compact_query("status" => status)
+        Models::AccountCreditsData.build(@transport.request(:get, "/v2.2/account/credits", query: q))
       end
 
       # GET /v2.2/account/recurring-charges — active monthly recurring
@@ -60,14 +64,14 @@ module VoiceTel
         Models::AccountMrcData.build(@transport.request(:get, "/v2.2/account/recurring-charges"))
       end
 
-      # GET /v2.2/account/payments — payment history. Rate-limited.
+      # GET /v2.2/account/payments — payment history.
       #
       # @return [Models::AccountPaymentsData]
       def payments
         Models::AccountPaymentsData.build(@transport.request(:get, "/v2.2/account/payments"))
       end
 
-      # GET /v2.2/account/registration — current SIP registration. Rate-limited.
+      # GET /v2.2/account/registration — current SIP registration.
       #
       # @return [Models::AccountRegistrationData]
       def registration

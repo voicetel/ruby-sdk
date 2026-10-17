@@ -30,25 +30,25 @@ module VoiceTel
       #
       # @return [Models::NumberDetail]
       def get(number)
-        Models::NumberDetail.build(@transport.request(:get, "/v2.2/numbers/#{number}"))
+        Models::NumberDetail.build(@transport.request(:get, "/v2.2/numbers/#{escape_path(number)}"))
       end
 
       # DELETE /v2.2/numbers/{number}. Returns nil on 204 No Content.
       def remove(number)
-        @transport.request(:delete, "/v2.2/numbers/#{number}")
+        @transport.request(:delete, "/v2.2/numbers/#{escape_path(number)}")
       end
 
       # PATCH /v2.2/numbers/{number} — move a TN to another account.
       #
       # @return [Models::NumberMoveData]
       def move(number, body)
-        Models::NumberMoveData.build(@transport.request(:patch, "/v2.2/numbers/#{number}", body: payload(body)))
+        Models::NumberMoveData.build(@transport.request(:patch, "/v2.2/numbers/#{escape_path(number)}", body: payload(body)))
       end
 
       # POST /v2.2/numbers/{number}/release — release a TN back to the
       # network. Returns nil on 204 No Content.
       def release(number)
-        @transport.request(:post, "/v2.2/numbers/#{number}/release")
+        @transport.request(:post, "/v2.2/numbers/#{escape_path(number)}/release")
       end
 
       # PUT /v2.2/numbers/{number}/route.
@@ -56,7 +56,7 @@ module VoiceTel
       # @return [Models::NumberRouteData]
       def set_route(number, body)
         Models::NumberRouteData.build(
-          @transport.request(:put, "/v2.2/numbers/#{number}/route", body: payload(body))
+          @transport.request(:put, "/v2.2/numbers/#{escape_path(number)}/route", body: payload(body))
         )
       end
 
@@ -65,7 +65,7 @@ module VoiceTel
       # @return [Models::NumberTranslationData]
       def set_translation(number, body)
         Models::NumberTranslationData.build(
-          @transport.request(:put, "/v2.2/numbers/#{number}/translation", body: payload(body))
+          @transport.request(:put, "/v2.2/numbers/#{escape_path(number)}/translation", body: payload(body))
         )
       end
 
@@ -74,7 +74,7 @@ module VoiceTel
       # @return [Models::NumberCnamData]
       def set_cnam(number, body)
         Models::NumberCnamData.build(
-          @transport.request(:put, "/v2.2/numbers/#{number}/cnam", body: payload(body))
+          @transport.request(:put, "/v2.2/numbers/#{escape_path(number)}/cnam", body: payload(body))
         )
       end
 
@@ -83,7 +83,7 @@ module VoiceTel
       # @return [Models::NumberLidbData]
       def set_lidb(number, body)
         Models::NumberLidbData.build(
-          @transport.request(:put, "/v2.2/numbers/#{number}/lidb", body: payload(body))
+          @transport.request(:put, "/v2.2/numbers/#{escape_path(number)}/lidb", body: payload(body))
         )
       end
 
@@ -91,7 +91,7 @@ module VoiceTel
       #
       # @return [Models::NumberFaxData]
       def get_fax(number)
-        Models::NumberFaxData.build(@transport.request(:get, "/v2.2/numbers/#{number}/fax"))
+        Models::NumberFaxData.build(@transport.request(:get, "/v2.2/numbers/#{escape_path(number)}/fax"))
       end
 
       # PUT /v2.2/numbers/{number}/fax.
@@ -99,13 +99,13 @@ module VoiceTel
       # @return [Models::NumberFaxData]
       def set_fax(number, body)
         Models::NumberFaxData.build(
-          @transport.request(:put, "/v2.2/numbers/#{number}/fax", body: payload(body))
+          @transport.request(:put, "/v2.2/numbers/#{escape_path(number)}/fax", body: payload(body))
         )
       end
 
       # DELETE /v2.2/numbers/{number}/fax. Returns nil on 204 No Content.
       def remove_fax(number)
-        @transport.request(:delete, "/v2.2/numbers/#{number}/fax")
+        @transport.request(:delete, "/v2.2/numbers/#{escape_path(number)}/fax")
       end
 
       # PUT /v2.2/numbers/{number}/forward.
@@ -113,20 +113,20 @@ module VoiceTel
       # @return [Models::NumberForwardData]
       def set_forward(number, body)
         Models::NumberForwardData.build(
-          @transport.request(:put, "/v2.2/numbers/#{number}/forward", body: payload(body))
+          @transport.request(:put, "/v2.2/numbers/#{escape_path(number)}/forward", body: payload(body))
         )
       end
 
       # DELETE /v2.2/numbers/{number}/forward. Returns nil on 204 No Content.
       def remove_forward(number)
-        @transport.request(:delete, "/v2.2/numbers/#{number}/forward")
+        @transport.request(:delete, "/v2.2/numbers/#{escape_path(number)}/forward")
       end
 
       # GET /v2.2/numbers/{number}/sms.
       #
       # @return [Models::NumberSmsData]
       def get_sms(number)
-        Models::NumberSmsData.build(@transport.request(:get, "/v2.2/numbers/#{number}/sms"))
+        Models::NumberSmsData.build(@transport.request(:get, "/v2.2/numbers/#{escape_path(number)}/sms"))
       end
 
       # PUT /v2.2/numbers/{number}/sms.
@@ -134,13 +134,13 @@ module VoiceTel
       # @return [Models::NumberSmsData]
       def set_sms(number, body)
         Models::NumberSmsData.build(
-          @transport.request(:put, "/v2.2/numbers/#{number}/sms", body: payload(body))
+          @transport.request(:put, "/v2.2/numbers/#{escape_path(number)}/sms", body: payload(body))
         )
       end
 
       # DELETE /v2.2/numbers/{number}/sms. Returns nil on 204 No Content.
       def remove_sms(number)
-        @transport.request(:delete, "/v2.2/numbers/#{number}/sms")
+        @transport.request(:delete, "/v2.2/numbers/#{escape_path(number)}/sms")
       end
 
       # GET /v2.2/numbers/{number}/messaging — current messaging routing
@@ -149,7 +149,7 @@ module VoiceTel
       #
       # @return [Models::NumberMessagingState]
       def get_messaging(number)
-        Models::NumberMessagingState.build(@transport.request(:get, "/v2.2/numbers/#{number}/messaging"))
+        Models::NumberMessagingState.build(@transport.request(:get, "/v2.2/numbers/#{escape_path(number)}/messaging"))
       end
 
       # PATCH /v2.2/numbers/{number}/messaging — update inbound and/or
@@ -158,7 +158,7 @@ module VoiceTel
       # @return [Models::NumberMessagingPatchData]
       def patch_messaging(number, body)
         Models::NumberMessagingPatchData.build(
-          @transport.request(:patch, "/v2.2/numbers/#{number}/messaging", body: payload(body))
+          @transport.request(:patch, "/v2.2/numbers/#{escape_path(number)}/messaging", body: payload(body))
         )
       end
 
@@ -174,27 +174,34 @@ module VoiceTel
       # @return [Models::NumberMessagingCampaignAssignData]
       def assign_campaign(number, body)
         Models::NumberMessagingCampaignAssignData.build(
-          @transport.request(:put, "/v2.2/numbers/#{number}/messaging-campaign", body: payload(body))
+          @transport.request(:put, "/v2.2/numbers/#{escape_path(number)}/messaging-campaign", body: payload(body))
         )
       end
 
       # DELETE /v2.2/numbers/{number}/messaging-campaign — returns 200 with
       # a body, not 204.
       #
+      # @param number [String] 10-digit TN on the account
+      # @param campaign_id [String] TCR campaign id the number is being removed from (required)
       # @return [Models::NumberMessagingCampaignUnassignData]
-      def unassign_campaign(number)
+      def unassign_campaign(number, campaign_id:)
         Models::NumberMessagingCampaignUnassignData.build(
-          @transport.request(:delete, "/v2.2/numbers/#{number}/messaging-campaign")
+          @transport.request(:delete, "/v2.2/numbers/#{escape_path(number)}/messaging-campaign",
+                             query: { "campaignId" => campaign_id })
         )
       end
 
       # DELETE /v2.2/numbers/messaging-campaign — bulk unassign; returns 200
-      # with a body, not 204.
+      # with a body, not 204. No request body: both parameters travel in the
+      # query string.
       #
+      # @param numbers [Array<String>] 10-digit TNs to remove (max 1000)
+      # @param campaign_id [String] TCR campaign id the numbers are removed from (required)
       # @return [Models::NumbersMessagingCampaignUnassignData]
-      def bulk_unassign_campaign(numbers)
+      def bulk_unassign_campaign(numbers:, campaign_id:)
+        q = { "numbers" => Array(numbers).join(","), "campaignId" => campaign_id }
         Models::NumbersMessagingCampaignUnassignData.build(
-          @transport.request(:delete, "/v2.2/numbers/messaging-campaign", body: { numbers: numbers })
+          @transport.request(:delete, "/v2.2/numbers/messaging-campaign", query: q)
         )
       end
 
@@ -205,7 +212,7 @@ module VoiceTel
       # @return [Models::PortOutPinUpdateData]
       def set_port_out_pin(number, body)
         Models::PortOutPinUpdateData.build(
-          @transport.request(:patch, "/v2.2/numbers/#{number}/port-out-pin", body: payload(body))
+          @transport.request(:patch, "/v2.2/numbers/#{escape_path(number)}/port-out-pin", body: payload(body))
         )
       end
     end

@@ -12,14 +12,14 @@ module VoiceTel
       #
       # @return [Models::CnamData]
       def cnam(number)
-        Models::CnamData.build(@transport.request(:get, "/v2.2/cnam/#{number}"))
+        Models::CnamData.build(@transport.request(:get, "/v2.2/cnam/#{escape_path(number)}"))
       end
 
       # GET /v2.2/lrn/{number}/{ani} — LRN dip.
       #
       # @return [Models::LrnLookupData]
       def lrn(number, ani)
-        Models::LrnLookupData.build(@transport.request(:get, "/v2.2/lrn/#{number}/#{ani}"))
+        Models::LrnLookupData.build(@transport.request(:get, "/v2.2/lrn/#{escape_path(number)}/#{escape_path(ani)}"))
       end
     end
   end

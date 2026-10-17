@@ -161,7 +161,7 @@ module VoiceTel
     end
 
     # Data payload from GET /v2.2/support/tickets.
-    TicketsListData = Data.define(:tickets) do
+    TicketsListData = Data.define(:total_count, :tickets) do
       extend Base
 
       def self.nested

@@ -3,8 +3,8 @@
 RSpec.describe VoiceTel do
   describe "module constants" do
     it "tracks the API version" do
-      expect(described_class::VERSION).to eq("2.2.15")
-      expect(described_class::API_VERSION).to eq("v2.2.15")
+      expect(described_class::VERSION).to eq("2.2.16")
+      expect(described_class::API_VERSION).to eq("v2.2.16")
       expect(described_class::DEFAULT_BASE_URL).to eq("https://api.voicetel.com")
     end
 
@@ -40,14 +40,14 @@ RSpec.describe VoiceTel do
 
       it "exchanges credentials for an api key and installs it" do
         stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/account/api-key")
-          .with(body: { username: 1_000_000_001, password: "hunter2" }.to_json)
+          .with(body: { username: "1000000001", password: "hunter2" }.to_json)
           .to_return(
             status: 200,
             body: { status: "success", data: { apikey: "deadbeef" * 4 } }.to_json,
             headers: { "Content-Type" => "application/json" }
           )
 
-        returned = client.login(username: 1_000_000_001, password: "hunter2")
+        returned = client.login(username: "1000000001", password: "hunter2")
         expect(returned).to eq("deadbeef" * 4)
         expect(client.api_key).to eq("deadbeef" * 4)
       end
@@ -60,7 +60,7 @@ RSpec.describe VoiceTel do
             headers: { "Content-Type" => "application/json" }
           )
 
-        expect { client.login(username: 1, password: "x") }.to raise_error(VoiceTel::ApiError) do |e|
+        expect { client.login(username: "1", password: "x") }.to raise_error(VoiceTel::ApiError) do |e|
           expect(e.kind).to eq(:authentication)
           expect(e.authentication?).to be(true)
         end

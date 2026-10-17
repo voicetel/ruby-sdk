@@ -10,14 +10,18 @@ module VoiceTel
     # snake_case in your Ruby hash (`from_number`, `to_number`) and the
     # transport will translate them when serializing.
     class Messaging < Base
-      # GET /v2.2/messages — fetch message history.
+      # GET /v2.2/messages — fetch message history for one number.
       #
+      # @param number [String] 10-digit TN whose messages are returned (required)
+      # @param from [Integer, nil] unix timestamp range start
+      # @param to [Integer, nil] unix timestamp range end
+      # @param type [String, nil] "sms", "mms", or "dlr"
       # @return [Models::MessageHistoryData]
-      def history(number: nil, start: nil, end_at: nil, type: nil)
+      def history(number:, from: nil, to: nil, type: nil)
         q = compact_query(
           "number" => number,
-          "start" => start,
-          "end" => end_at,
+          "from" => from,
+          "to" => to,
           "type" => type
         )
         Models::MessageHistoryData.build(@transport.request(:get, "/v2.2/messages", query: q))
@@ -42,9 +46,12 @@ module VoiceTel
       # GET /v2.2/messaging/campaigns — current 10DLC campaign statuses,
       # including carrier (DCA) review progress per campaign.
       #
+      # @param ids [Array<String>, String] campaign ids (max 100) — an array
+      #   of ids or a comma-separated string
       # @return [Models::MessagingCampaignStatusData]
-      def campaign_status
-        Models::MessagingCampaignStatusData.build(@transport.request(:get, "/v2.2/messaging/campaigns"))
+      def campaign_status(ids:)
+        q = { "ids" => (ids.is_a?(Array) ? ids.join(",") : ids) }
+        Models::MessagingCampaignStatusData.build(@transport.request(:get, "/v2.2/messaging/campaigns", query: q))
       end
 
       # POST /v2.2/messaging/campaigns — register a 10DLC campaign. The body
@@ -59,14 +66,12 @@ module VoiceTel
         )
       end
 
-      # GET /v2.2/numbers/messaging — messaging state for many numbers.
-      # Pass an empty array (or omit) for "all numbers on the account".
+      # GET /v2.2/numbers/messaging — messaging state for a set of numbers.
       #
+      # @param numbers [Array<String>] 10-digit TNs (max 1000)
       # @return [Models::NumbersMessagingListData]
-      def numbers_state(numbers: nil)
-        q = compact_query(
-          "numbers" => (numbers && !numbers.empty? ? Array(numbers).join(",") : nil)
-        )
+      def numbers_state(numbers:)
+        q = { "numbers" => Array(numbers).join(",") }
         Models::NumbersMessagingListData.build(@transport.request(:get, "/v2.2/numbers/messaging", query: q))
       end
 

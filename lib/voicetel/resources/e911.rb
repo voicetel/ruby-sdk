@@ -35,19 +35,19 @@ module VoiceTel
       #
       # @return [Models::E911RecordData]
       def get(dn)
-        Models::E911RecordData.build(@transport.request(:get, "/v2.2/e911/#{dn}"))
+        Models::E911RecordData.build(@transport.request(:get, "/v2.2/e911/#{escape_path(dn)}"))
       end
 
       # PUT /v2.2/e911/{dn} — provision with a previously-validated address.
       #
       # @return [Models::E911RecordData]
       def provision(dn, body)
-        Models::E911RecordData.build(@transport.request(:put, "/v2.2/e911/#{dn}", body: payload(body)))
+        Models::E911RecordData.build(@transport.request(:put, "/v2.2/e911/#{escape_path(dn)}", body: payload(body)))
       end
 
       # DELETE /v2.2/e911/{dn}. Returns nil on 204 No Content.
       def remove(dn)
-        @transport.request(:delete, "/v2.2/e911/#{dn}")
+        @transport.request(:delete, "/v2.2/e911/#{escape_path(dn)}")
       end
     end
   end

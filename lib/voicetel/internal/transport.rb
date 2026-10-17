@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "date"
 require "faraday"
 require "faraday/retry"
 require "faraday/net_http_persistent"
@@ -19,6 +20,25 @@ module VoiceTel
     # responses before returning the inner payload.
     class Transport
       RETRYABLE_STATUSES = [429, 500, 502, 503, 504].freeze
+
+      # Upper bound (seconds) for any single retry sleep — exponential backoff
+      # and server-supplied Retry-After / RateLimit-Reset hints alike.
+      MAX_RETRY_DELAY = 8
+
+      # Seconds to honor from a Retry-After / RateLimit-Reset header value
+      # (integer seconds or an RFC 2822 date), capped at MAX_RETRY_DELAY.
+      # Nil/blank/garbage parses to 0.
+      def self.retry_after_seconds(value)
+        s = value.to_s
+        return 0.0 if s.empty?
+
+        seconds = begin
+          DateTime.rfc2822(s).to_time - Time.now.utc
+        rescue ArgumentError
+          s.to_f
+        end
+        [seconds, MAX_RETRY_DELAY].min
+      end
 
       attr_reader :base_url, :user_agent, :timeout, :max_retries
       attr_accessor :api_key
@@ -61,6 +81,10 @@ module VoiceTel
         raise ApiError.new("voicetel: request timed out: #{e.message}", kind: :unknown)
       rescue Faraday::ConnectionFailed => e
         raise ApiError.new("voicetel: connection failed: #{e.message}", kind: :unknown)
+      rescue Faraday::SSLError => e
+        raise ApiError.new("voicetel: SSL error: #{e.message}", kind: :unknown)
+      rescue Faraday::Error => e
+        raise ApiError.new("voicetel: transport error: #{e.message}", kind: :unknown)
       end
 
       # Recursively transform a Ruby snake_case key Hash/Array structure into
@@ -106,10 +130,11 @@ module VoiceTel
           interval: 0.5,
           interval_randomness: 0.0,
           backoff_factor: 2,
-          max_interval: 8,
+          max_interval: MAX_RETRY_DELAY,
           retry_statuses: RETRYABLE_STATUSES,
           methods: %i[get post put patch delete],
-          retry_if: ->(env, _exception) { RETRYABLE_STATUSES.include?(env.status) }
+          retry_if: ->(env, _exception) { RETRYABLE_STATUSES.include?(env.status) },
+          header_parser_block: ->(value) { Transport.retry_after_seconds(value) }
         }
       end
 
@@ -118,7 +143,16 @@ module VoiceTel
         encoding = response.headers["content-encoding"] || response.headers["Content-Encoding"]
         return raw unless encoding&.downcase&.include?("gzip")
 
-        Zlib::GzipReader.new(StringIO.new(raw)).read
+        begin
+          Zlib::GzipReader.new(StringIO.new(raw)).read
+        rescue Zlib::GzipFile::Error => e
+          raise ApiError.new(
+            "voicetel: decode gzip response: #{e.message}",
+            kind: :unknown,
+            status_code: response.status,
+            body: raw
+          )
+        end
       end
 
       def build_headers(require_auth)
@@ -168,9 +202,19 @@ module VoiceTel
         message = nil
 
         if parsed.is_a?(Hash)
-          code    = parsed["code"]    || parsed["error"]
-          message = parsed["message"] || parsed["error"]
+          error = parsed["error"]
+          if error.is_a?(Hash)
+            # Spec envelope: {"status":"error","error":{"code":400,"message":"..."}}
+            code = error["code"]
+            message = error["message"]
+          else
+            # Legacy flat shapes: {"code":..,"message":..} or {"error":".."}
+            code = parsed["code"] || error
+            message = parsed["message"] || error
+          end
         end
+        code = nil unless code.is_a?(String) || code.is_a?(Integer)
+        message = nil unless message.is_a?(String) && !message.empty?
         message ||= "HTTP #{status}"
 
         ApiError.from_response(status, code, "voicetel: HTTP #{status}: #{message}", parsed || raw)

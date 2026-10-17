@@ -25,11 +25,16 @@ module VoiceTel
         Models::AclAddData.build(@transport.request(:post, "/v2.2/acl", body: payload(body)))
       end
 
-      # DELETE /v2.2/acl — returns 200 with a body, not 204.
+      # DELETE /v2.2/acl — remove CIDR entries. Returns 200 with a body,
+      # not 204. No request body: the entries travel in the `cidrs` query
+      # parameter.
       #
+      # @param cidrs [Array<String>, String] CIDR blocks to remove (e.g.
+      #   ["203.0.113.0/24", "203.0.113.1/32"]) or a comma-separated string
       # @return [Models::AclRemoveData]
-      def remove(body)
-        Models::AclRemoveData.build(@transport.request(:delete, "/v2.2/acl", body: payload(body)))
+      def remove(cidrs:)
+        q = { "cidrs" => (cidrs.is_a?(Array) ? cidrs.join(",") : cidrs) }
+        Models::AclRemoveData.build(@transport.request(:delete, "/v2.2/acl", query: q))
       end
     end
   end
