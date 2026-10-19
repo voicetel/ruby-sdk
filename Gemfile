@@ -7,7 +7,7 @@ gemspec
 group :development, :test do
   gem "rake", "~> 13.0"
   gem "rspec", "~> 3.13"
-  gem "simplecov", "~> 0.22", require: false
+  gem "simplecov", "~> 1.2", require: false
   gem "webmock", "~> 3.34"
 end
 
