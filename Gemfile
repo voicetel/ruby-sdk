@@ -16,6 +16,6 @@ end
 # its own group so the 3.2 matrix leg can skip it via
 # `bundle config set --local without "lint"`.
 group :lint do
-  gem "rubocop", "~> 1.91"
+  gem "rubocop", "~> 1.92"
   gem "rubocop-rspec", "~> 3.10"
 end
