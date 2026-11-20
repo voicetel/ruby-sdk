@@ -2,7 +2,7 @@
 
 The official Ruby client for the [VoiceTel REST API](https://voicetel.com/docs/api/v2.2/) — provision numbers, place orders, validate e911, send messages, and manage your account, all with idiomatic Ruby, structured errors, and zero codegen footprint.
 
-![Version](https://img.shields.io/badge/version-2.2.20-blue)
+![Version](https://img.shields.io/badge/version-2.2.21-blue)
 ![Ruby](https://img.shields.io/badge/ruby-3.2%2B-red)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Coverage](https://img.shields.io/badge/coverage-%E2%89%A585%25-brightgreen)
@@ -38,10 +38,11 @@ The official Ruby client for the [VoiceTel REST API](https://voicetel.com/docs/a
 - **Bearer auth** managed for you; password→key exchange handled by `client.login`.
 - **Structured ApiError** — `:rate_limit`, `:not_found`, `:conflict`, ... pattern-match on a Symbol, or call `err.rate_limit?`.
 
-### 📞 Complete API Coverage (83 operations)
+### 📞 Complete API Coverage (88 operations)
 - **Numbers** — list, get, add, remove, route, translate, CNAM, LIDB, fax, forward, SMS, directory listing (411), messaging campaigns, port-out PIN, account moves.
 - **Account** — profile, sub-accounts, CDRs, credits, payments, MRC, registration, password recovery.
 - **e911** — record provisioning, address validation, lookup, removal.
+- **Fax** — fax-capable number listing, sending (multipart, idempotent per `Idempotency-Key` UUID), job history, single-job polling, rendered-PDF download.
 - **Gateways** — list, create, update, delete, view bound numbers.
 - **Messaging** — SMS & MMS sending, message history, 10DLC brand and campaign registration, per-number messaging state, and messaging health (account overview, per-number live check, spam-blocked samples, alert-email setting).
 - **Lookups** — CNAM, carrier & line type, LRN dips.
@@ -64,7 +65,7 @@ gem install voicetel
 Or in your `Gemfile`:
 
 ```ruby
-gem "voicetel", "~> 2.2.20"
+gem "voicetel", "~> 2.2.21"
 ```
 
 Requires Ruby 3.2 or later. Tested on 3.2, 3.3, and 3.4.
@@ -121,6 +122,7 @@ key = client.login(username: "1000000001", password: "hunter2")
 | `client.acl` | IP allowlist (CIDR entries) | `client.acl.add(acl: [{ cidr: "1.2.3.0/24" }])` |
 | `client.authentication` | SIP/HTTP auth mode + password | `client.authentication.update(auth_type: 1)` |
 | `client.e911` | Records, address validation, provisioning | `client.e911.validate(address1: "...", city: "...", state: "NJ", zip: "07101")` |
+| `client.fax` | Send faxes, history, rendered-PDF download | `client.fax.send_fax(from_number: "2015550123", to_number: "2125550123", documents: [{ name: "contract.pdf", content: pdf }])` |
 | `client.gateways` | Termination routes | `client.gateways.list` |
 | `client.i_numbering` | Inventory, orders, port-ins | `client.i_numbering.search_inventory(tn_mask: "201555*")` |
 | `client.lookups` | CNAM, carrier & line type, LRN dips | `client.lookups.carrier("2015550123")` |
@@ -184,6 +186,8 @@ These endpoints are limited to **6 requests per hour per IP**:
 - `account/api-key` (`client.login`)
 
 `POST /v2.2/messaging/health/check` is separately limited to **30 checks per hour per account**.
+
+`POST /v2.2/faxes` (`client.fax.send_fax`) is limited to **10 sends per minute per account**.
 
 The SDK automatically retries 429 responses with `Retry-After` honored (capped at 8s), up to `max_retries` (default `2`). To raise it:
 

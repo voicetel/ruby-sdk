@@ -26,15 +26,14 @@ module VoiceTel
       end
 
       # DELETE /v2.2/acl — remove CIDR entries. Returns 200 with a body,
-      # not 204. No request body: the entries travel in the `cidrs` query
-      # parameter.
+      # not 204. Since the server's v2.2.0 rewrite the handler reads the
+      # same JSON body as add — { acl: [{ cidr: "..." }]} — and the old
+      # `cidrs` query parameter is no longer read.
       #
-      # @param cidrs [Array<String>, String] CIDR blocks to remove (e.g.
-      #   ["203.0.113.0/24", "203.0.113.1/32"]) or a comma-separated string
+      # @param body [Hash, Models::AclModifyRequest] entries to remove
       # @return [Models::AclRemoveData]
-      def remove(cidrs:)
-        q = { "cidrs" => (cidrs.is_a?(Array) ? cidrs.join(",") : cidrs) }
-        Models::AclRemoveData.build(@transport.request(:delete, "/v2.2/acl", query: q))
+      def remove(body)
+        Models::AclRemoveData.build(@transport.request(:delete, "/v2.2/acl", body: payload(body)))
       end
     end
   end

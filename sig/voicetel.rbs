@@ -393,6 +393,63 @@ module VoiceTel
       def self.build: (untyped payload) -> E911ValidateData?
     end
 
+    # ---- fax ----
+
+    class FaxNumberEntry
+      attr_reader number: String?
+      attr_reader destination_id: Integer?
+      attr_reader email: String?
+      def self.build: (untyped payload) -> FaxNumberEntry?
+    end
+
+    class FaxNumbersData
+      attr_reader numbers: Array[FaxNumberEntry]
+      def self.build: (untyped payload) -> FaxNumbersData?
+    end
+
+    class FaxDocumentMeta
+      attr_reader name: String?
+      attr_reader size: Integer?
+      attr_reader content_type: String?
+      def self.build: (untyped payload) -> FaxDocumentMeta?
+    end
+
+    class FaxSendData
+      attr_reader id: String?
+      attr_reader from_number: String?
+      attr_reader to_number: String?
+      attr_reader status: String?
+      attr_reader documents: Array[FaxDocumentMeta]
+      def self.build: (untyped payload) -> FaxSendData?
+    end
+
+    class FaxJob
+      attr_reader id: String?
+      attr_reader from_number: String?
+      attr_reader to_number: String?
+      attr_reader client_token: String?
+      attr_reader status: String?
+      attr_reader submitted_at: String?
+      attr_reader started_at: String?
+      attr_reader completed_at: String?
+      attr_reader attempts: Integer?
+      attr_reader failure_reason: String?
+      attr_reader documents: Array[FaxDocumentMeta]
+      attr_reader document_available: bool?
+      attr_reader document_name: String?
+      attr_reader document_size: Integer?
+      def self.build: (untyped payload) -> FaxJob?
+    end
+
+    class FaxHistoryData
+      attr_reader number: String?
+      attr_reader from_ts: Integer?
+      attr_reader to_ts: Integer?
+      attr_reader faxes: Array[FaxJob]
+      attr_reader next_cursor: String?
+      def self.build: (untyped payload) -> FaxHistoryData?
+    end
+
     # ---- gateways ----
 
     class GatewayAddRequest
@@ -1305,7 +1362,8 @@ module VoiceTel
 
       def request: (
         Symbol method, String path,
-        ?query: Hash[untyped, untyped]?, ?body: untyped, ?require_auth: bool
+        ?query: Hash[untyped, untyped]?, ?body: untyped, ?require_auth: bool,
+        ?multipart: Hash[untyped, untyped]?, ?idempotency_key: String?, ?raw: bool
       ) -> untyped
 
       def camelize_keys: (untyped) -> untyped
@@ -1336,7 +1394,7 @@ module VoiceTel
     class Acl < Base
       def list: () -> Models::AclListData
       def add: (untyped body) -> Models::AclAddData
-      def remove: (cidrs: Array[String] | String) -> Models::AclRemoveData
+      def remove: (untyped body) -> Models::AclRemoveData
     end
 
     class Authentication < Base
@@ -1356,6 +1414,24 @@ module VoiceTel
       def get: (String dn) -> Models::E911RecordData
       def provision: (String dn, untyped body) -> Models::E911RecordData
       def remove: (String dn) -> nil
+    end
+
+    class Fax < Base
+      CONTENT_TYPES: Hash[String, String]
+
+      def numbers: () -> Models::FaxNumbersData
+      def send_fax: (
+        from_number: String, to_number: String,
+        documents: Array[Hash[untyped, untyped] | String],
+        ?idempotency_key: String?
+      ) -> Models::FaxSendData
+      def history: (
+        number: String,
+        ?from: Integer?, ?to: Integer?, ?limit: Integer?,
+        ?cursor: String?, ?status: String?
+      ) -> Models::FaxHistoryData
+      def get: (String id) -> Models::FaxJob
+      def document: (String id) -> String
     end
 
     class Gateways < Base
@@ -1455,6 +1531,7 @@ module VoiceTel
     def acl: () -> Resources::Acl
     def authentication: () -> Resources::Authentication
     def e911: () -> Resources::E911
+    def fax: () -> Resources::Fax
     def gateways: () -> Resources::Gateways
     def i_numbering: () -> Resources::INumbering
     def lookups: () -> Resources::Lookups

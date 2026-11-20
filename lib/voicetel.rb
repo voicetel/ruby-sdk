@@ -8,6 +8,7 @@ require_relative "voicetel/resources/account"
 require_relative "voicetel/resources/acl"
 require_relative "voicetel/resources/authentication"
 require_relative "voicetel/resources/e911"
+require_relative "voicetel/resources/fax"
 require_relative "voicetel/resources/gateways"
 require_relative "voicetel/resources/i_numbering"
 require_relative "voicetel/resources/lookups"
@@ -96,6 +97,10 @@ module VoiceTel
 
     def e911
       @e911 ||= Resources::E911.new(@transport)
+    end
+
+    def fax
+      @fax ||= Resources::Fax.new(@transport)
     end
 
     def gateways

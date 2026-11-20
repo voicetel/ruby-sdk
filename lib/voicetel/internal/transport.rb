@@ -21,6 +21,9 @@ module VoiceTel
     class Transport
       RETRYABLE_STATUSES = [429, 500, 502, 503, 504].freeze
 
+      # Line ending for the hand-built multipart/form-data bodies.
+      CRLF = "\r\n"
+
       # Upper bound (seconds) for any single retry sleep — exponential backoff
       # and server-supplied Retry-After / RateLimit-Reset hints alike.
       MAX_RETRY_DELAY = 8
@@ -62,7 +65,15 @@ module VoiceTel
       # @param query      [Hash, nil] query string params, snake_case keys
       # @param body       [Hash, nil] request body, snake_case keys (translated to camelCase)
       # @param require_auth [Boolean] false skips the bearer header
-      def request(method, path, query: nil, body: nil, require_auth: true)
+      # @param multipart  [Hash, nil] multipart/form-data request — { fields:
+      #   {String => String}, files: [{ name:, filename:, content:,
+      #   content_type: }] }. When given, it replaces the JSON body and the
+      #   boundary/Content-Type are handled here.
+      # @param idempotency_key [String, nil] overrides the auto-generated
+      #   Idempotency-Key on POST/PUT/PATCH (the fax send requires a UUID)
+      # @param raw        [Boolean] true returns the success body as a raw
+      #   String (binary downloads) instead of parsing the envelope
+      def request(method, path, query: nil, body: nil, require_auth: true, multipart: nil, idempotency_key: nil, raw: false)
         if require_auth && (@api_key.nil? || @api_key.empty?)
           raise ApiError.new(
             "no api key set; call client.login(...) or pass api_key: to Client.new",
@@ -71,12 +82,18 @@ module VoiceTel
         end
 
         headers = build_headers(require_auth)
-        headers["Idempotency-Key"] = SecureRandom.uuid if %i[post put patch].include?(method)
-        response = @conn.run_request(method, path, body ? JSON.generate(camelize_keys(body)) : nil, headers) do |req|
+        if multipart
+          boundary, request_body = build_multipart(multipart)
+          headers["Content-Type"] = "multipart/form-data; boundary=#{boundary}"
+        else
+          request_body = body ? JSON.generate(camelize_keys(body)) : nil
+        end
+        headers["Idempotency-Key"] = idempotency_key || SecureRandom.uuid if %i[post put patch].include?(method)
+        response = @conn.run_request(method, path, request_body, headers) do |req|
           req.params.update(camelize_keys(query)) if query && !query.empty?
         end
 
-        handle_response(response)
+        handle_response(response, raw: raw)
       rescue Faraday::TimeoutError => e
         raise ApiError.new("voicetel: request timed out: #{e.message}", kind: :unknown)
       rescue Faraday::ConnectionFailed => e
@@ -166,18 +183,45 @@ module VoiceTel
         h
       end
 
-      def handle_response(response)
+      # Hand-builds a multipart/form-data body (no multipart middleware in
+      # the stack). Returns [boundary, body].
+      def build_multipart(multipart)
+        boundary = "voicetel-#{SecureRandom.hex(16)}"
+        parts = []
+
+        (multipart[:fields] || {}).each do |name, value|
+          parts << "Content-Disposition: form-data; name=\"#{sanitize_header(name)}\"#{CRLF}#{CRLF}#{value}"
+        end
+
+        (multipart[:files] || []).each do |file|
+          parts << "Content-Disposition: form-data; name=\"#{sanitize_header(file[:name])}\"; " \
+                   "filename=\"#{sanitize_header(file[:filename])}\"#{CRLF}" \
+                   "Content-Type: #{sanitize_header(file[:content_type])}#{CRLF}#{CRLF}#{file[:content]}"
+        end
+
+        [boundary, parts.map { |part| "--#{boundary}#{CRLF}#{part}#{CRLF}" }.join + "--#{boundary}--#{CRLF}"]
+      end
+
+      # Quotes and CR/LF have no business in a Content-Disposition name or
+      # filename — drop them so a hostile name can't add headers or parts.
+      def sanitize_header(value)
+        value.to_s.gsub(/["\r\n]/, "")
+      end
+
+      def handle_response(response, raw: false)
         status = response.status
-        raw = decode_body(response)
+        body = decode_body(response)
 
         if status >= 200 && status < 300
-          return nil if raw.empty? || status == 204
+          return body if raw
 
-          parsed = parse_json(raw)
+          return nil if body.empty? || status == 204
+
+          parsed = parse_json(body)
           return unwrap(parsed)
         end
 
-        raise build_error(status, raw)
+        raise build_error(status, body)
       end
 
       def parse_json(raw)

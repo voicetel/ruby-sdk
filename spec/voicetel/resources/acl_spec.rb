@@ -29,12 +29,40 @@ RSpec.describe VoiceTel::Resources::Acl do
                    ))
   end
 
-  it "DELETEs CIDR entries via the cidrs query param (returns 200 with a body)" do
+  it "DELETEs entries via the {acl: [...]} body, same shape as add (returns 200 with a body)" do
     stub_request(:delete, "#{SpecHelpers::BASE_URL}/v2.2/acl")
-      .with(query: { cidrs: "1.2.3.0/24" }) { |req| req.body.nil? || req.body.empty? }
+      .with(body: { acl: [{ cidr: "1.2.3.0/24" }] }.to_json, query: {})
       .to_return(status: 200, body: envelope(removed: [{ cidr: "1.2.3.0/24" }]))
-    result = client.acl.remove(cidrs: ["1.2.3.0/24"])
+    result = client.acl.remove(acl: [{ cidr: "1.2.3.0/24" }])
     expect(result.removed.first.cidr).to eq("1.2.3.0/24")
+  end
+
+  it "serializes AclModifyRequest models in the DELETE body" do
+    stub_request(:delete, "#{SpecHelpers::BASE_URL}/v2.2/acl")
+      .with(body: { acl: [{ cidr: "1.2.3.0/24" }] }.to_json)
+      .to_return(status: 200, body: envelope(removed: [{ cidr: "1.2.3.0/24" }]))
+    client.acl.remove(VoiceTel::Models::AclModifyRequest.new(
+                        acl: [VoiceTel::Models::CidrEntry.new(cidr: "1.2.3.0/24")]
+                      ))
+  end
+
+  it "surfaces the 409 delete conflict body (removed + failed) via ApiError#body" do
+    stub_request(:delete, "#{SpecHelpers::BASE_URL}/v2.2/acl")
+      .to_return(
+        status: 409,
+        body: {
+          status: "error",
+          error: { code: 409, message: "One or more ACL entries could not be removed" },
+          data: {
+            removed: [{ cidr: "203.0.113.0/24" }],
+            failed: [{ cidr: "203.0.113.9/32", reason: "DB delete failed" }]
+          }
+        }.to_json
+      )
+    expect { client.acl.remove(acl: [{ cidr: "203.0.113.9/32" }]) }.to raise_error(VoiceTel::ApiError) do |e|
+      expect(e.conflict?).to be(true)
+      expect(e.body["data"]["failed"].first["reason"]).to eq("DB delete failed")
+    end
   end
 
   it "surfaces the 409 conflict body via ApiError#body" do
