@@ -187,18 +187,18 @@ module VoiceTel
       # the stack). Returns [boundary, body].
       def build_multipart(multipart)
         boundary = "voicetel-#{SecureRandom.hex(16)}"
-        parts = []
 
-        (multipart[:fields] || {}).each do |name, value|
-          parts << "Content-Disposition: form-data; name=\"#{sanitize_header(name)}\"#{CRLF}#{CRLF}#{value}"
+        fields = (multipart[:fields] || {}).map do |name, value|
+          "Content-Disposition: form-data; name=\"#{sanitize_header(name)}\"#{CRLF}#{CRLF}#{value}"
         end
 
-        (multipart[:files] || []).each do |file|
-          parts << "Content-Disposition: form-data; name=\"#{sanitize_header(file[:name])}\"; " \
-                   "filename=\"#{sanitize_header(file[:filename])}\"#{CRLF}" \
-                   "Content-Type: #{sanitize_header(file[:content_type])}#{CRLF}#{CRLF}#{file[:content]}"
+        files = (multipart[:files] || []).map do |file|
+          "Content-Disposition: form-data; name=\"#{sanitize_header(file[:name])}\"; " \
+            "filename=\"#{sanitize_header(file[:filename])}\"#{CRLF}" \
+            "Content-Type: #{sanitize_header(file[:content_type])}#{CRLF}#{CRLF}#{file[:content]}"
         end
 
+        parts = fields + files
         [boundary, parts.map { |part| "--#{boundary}#{CRLF}#{part}#{CRLF}" }.join + "--#{boundary}--#{CRLF}"]
       end
 

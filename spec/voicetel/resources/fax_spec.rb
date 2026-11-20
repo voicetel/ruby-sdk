@@ -10,9 +10,9 @@ RSpec.describe VoiceTel::Resources::Fax do
     it "GETs /v2.2/numbers/fax" do
       stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/numbers/fax")
         .to_return(status: 200, body: envelope(numbers: [
-                                                { number: "2015550123", destinationId: 7, email: "fax@example.com" },
-                                                { number: "2015550199", destinationId: 0, email: "account@example.com" }
-                                              ]))
+                                                 { number: "2015550123", destinationId: 7, email: "fax@example.com" },
+                                                 { number: "2015550199", destinationId: 0, email: "account@example.com" }
+                                               ]))
       result = client.fax.numbers
       expect(result).to be_a(VoiceTel::Models::FaxNumbersData)
       expect(result.numbers.first).to be_a(VoiceTel::Models::FaxNumberEntry)
@@ -30,10 +30,8 @@ RSpec.describe VoiceTel::Resources::Fax do
       )
     end
 
-    it "POSTs a multipart form with a UUID v4 Idempotency-Key" do
-      captured = nil
+    it "returns the queued job" do
       stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/faxes")
-        .with { |req| captured = req }
         .to_return(status: 201, body: job_envelope)
 
       result = client.fax.send_fax(
@@ -45,6 +43,18 @@ RSpec.describe VoiceTel::Resources::Fax do
       expect(result.status).to eq("queued")
       expect(result.documents.first).to be_a(VoiceTel::Models::FaxDocumentMeta)
       expect(result.documents.first.content_type).to eq("application/pdf")
+    end
+
+    it "POSTs a multipart form with a UUID v4 Idempotency-Key" do
+      captured = nil
+      stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/faxes")
+        .with { |req| captured = req }
+        .to_return(status: 201, body: job_envelope)
+
+      client.fax.send_fax(
+        from_number: "2015550123", to_number: "2125550123",
+        documents: [{ name: "contract.pdf", content: pdf, content_type: "application/pdf" }]
+      )
 
       headers = captured.headers
       expect(headers["Content-Type"]).to match(%r{\Amultipart/form-data; boundary=})
@@ -71,7 +81,7 @@ RSpec.describe VoiceTel::Resources::Fax do
         documents: [{ name: "a.pdf", content: "pdf-a" }, { name: "b.docx", content: "docx-b" }]
       )
       body = captured.body
-      expect(body.scan(%r{form-data; name="documents"}).length).to eq(2)
+      expect(body.scan('form-data; name="documents"').length).to eq(2)
       expect(body).to include("filename=\"a.pdf\"\r\nContent-Type: application/pdf\r\n\r\npdf-a\r\n")
       expect(body).to include("filename=\"b.docx\"\r\n") # docx type guessed
       expect(body).to include("Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document\r\n\r\ndocx-b\r\n")
@@ -121,10 +131,11 @@ RSpec.describe VoiceTel::Resources::Fax do
             serverTime: 1_795_100_000
           }.to_json
         )
-      expect do
+      fax_call = lambda do
         client.fax.send_fax(from_number: "2015550123", to_number: "2125550123",
                             documents: [{ name: "contract.pdf", content: pdf }])
-      end.to raise_error(VoiceTel::ApiError) do |e|
+      end
+      expect(&fax_call).to raise_error(VoiceTel::ApiError) do |e|
         expect(e.rate_limit?).to be(true)
         expect(e.message).to include("Too many faxes")
         expect(e.body["serverTime"]).to eq(1_795_100_000)
@@ -141,10 +152,11 @@ RSpec.describe VoiceTel::Resources::Fax do
             status: status,
             body: { status: "error", error: { code: status, message: message } }.to_json
           )
-        expect do
+        fax_call = lambda do
           client.fax.send_fax(from_number: "2015550123", to_number: "2125550123",
                               documents: [{ name: "contract.pdf", content: pdf }])
-        end.to raise_error(VoiceTel::ApiError) do |e|
+        end
+        expect(&fax_call).to raise_error(VoiceTel::ApiError) do |e|
           expect(e.kind).to eq(predicate.to_s.chomp("?").to_sym)
           expect(e.public_send(predicate)).to be(true)
           expect(e.status_code).to eq(status)

@@ -33,7 +33,7 @@ RSpec.describe VoiceTel::Resources::Messaging do
   it "POSTs a media-only MMS without text" do
     stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/messages")
       .with(body: { fromNumber: "2015550100", toNumber: "2015550123",
-                     mediaUrls: ["https://cdn.example.test/logo.png"] }.to_json)
+                    mediaUrls: ["https://cdn.example.test/logo.png"] }.to_json)
       .to_return(status: 200, body: envelope(id: "mms1", type: "mms", fromNumber: "2015550100",
                                              toNumber: "2015550123", parts: 1))
     result = client.messaging.send_message(
@@ -50,10 +50,10 @@ RSpec.describe VoiceTel::Resources::Messaging do
         status: 200,
         body: envelope(number: "2015550123", type: "dlr", fromTs: 0, toTs: 0,
                        messages: [{ id: "r1", key: %w[1000000001 2015550123 1_769_000_000],
-                                   value: { sourceNumber: "2015550100", number: "2015550123",
-                                            messageText: "DELIV", transactionGUID: "msg_1",
-                                            concatenatedMessage: nil, attachments: nil,
-                                            subject: nil, ip: "203.0.113.7" } }])
+                                    value: { sourceNumber: "2015550100", number: "2015550123",
+                                             messageText: "DELIV", transactionGUID: "msg_1",
+                                             concatenatedMessage: nil, attachments: nil,
+                                             subject: nil, ip: "203.0.113.7" } }])
       )
     result = client.messaging.history(number: "2015550123")
     value = result.messages.first.value
