@@ -1,15 +1,11 @@
 # Changelog
 
-## Unreleased
-
-### Added
-- `:insufficient_balance` (HTTP 402 — fax send, directory listing) and `:payload_too_large` (HTTP 413 — fax documents over 8 MiB) error kinds, with the usual `ApiError#insufficient_balance?` / `#payload_too_large?` predicates. Both previously fell through to `:unknown`.
-
 ## 2.2.21 — 2026-11-20
 
 Spec v2.2.21 audit release: the new Fax API and one breaking wire fix.
 
 ### Added
+- `:insufficient_balance` (HTTP 402 — fax send, directory listing) and `:payload_too_large` (HTTP 413 — fax documents over 8 MiB) error kinds, with the usual `ApiError#insufficient_balance?` / `#payload_too_large?` predicates. Both previously fell through to `:unknown`.
 - **Fax API** (5 operations, tag `Fax`): `client.fax`
   - `numbers` — `GET /v2.2/numbers/fax`: every fax-capable number on the account with the email faxes to it deliver to (`destination_id` 0 = the account email).
   - `send_fax(from_number:, to_number:, documents:, idempotency_key:)` — `POST /v2.2/faxes` (HTTP 201): **multipart/form-data** with `fromNumber`/`toNumber` text fields and 1–10 `documents` file parts (PDF/DOC/DOCX, magic-byte checked server-side, 8 MiB each and in total). Idempotent per the client-generated **UUID `Idempotency-Key`** — a fresh one is generated when omitted; pass the same key with the same documents to get the original job back instead of a second send. Documents are part hashes (`name`, `content` as raw bytes, optional `content_type` — guessed from the name) or bare file paths. Rate-limited to 10 sends/minute/account. Returns `Models::FaxSendData`.
