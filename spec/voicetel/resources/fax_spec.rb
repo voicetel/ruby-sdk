@@ -128,6 +128,28 @@ RSpec.describe VoiceTel::Resources::Fax do
         expect(e.body["serverTime"]).to eq(1_795_100_000)
       end
     end
+
+    it "maps 402 to insufficient_balance and 413 to payload_too_large" do
+      {
+        402 => [:insufficient_balance?, "Insufficient balance to send fax."],
+        413 => [:payload_too_large?, "Document exceeds the 8 MiB limit."]
+      }.each do |status, (predicate, message)|
+        stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/faxes")
+          .to_return(
+            status: status,
+            body: { status: "error", error: { code: status, message: message } }.to_json
+          )
+        expect do
+          client.fax.send_fax(from_number: "2015550123", to_number: "2125550123",
+                              documents: [{ name: "contract.pdf", content: pdf }])
+        end.to raise_error(VoiceTel::ApiError) do |e|
+          expect(e.kind).to eq(predicate.to_s.chomp("?").to_sym)
+          expect(e.public_send(predicate)).to be(true)
+          expect(e.status_code).to eq(status)
+          expect(e.message).to include(message)
+        end
+      end
+    end
   end
 
   describe "#history" do

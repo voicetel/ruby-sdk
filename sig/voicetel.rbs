@@ -24,9 +24,11 @@ module VoiceTel
 
     def bad_request?: () -> bool
     def authentication?: () -> bool
+    def insufficient_balance?: () -> bool
     def permission_denied?: () -> bool
     def not_found?: () -> bool
     def conflict?: () -> bool
+    def payload_too_large?: () -> bool
     def rate_limit?: () -> bool
     def server?: () -> bool
     def unknown?: () -> bool

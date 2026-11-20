@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- `:insufficient_balance` (HTTP 402 — fax send, directory listing) and `:payload_too_large` (HTTP 413 — fax documents over 8 MiB) error kinds, with the usual `ApiError#insufficient_balance?` / `#payload_too_large?` predicates. Both previously fell through to `:unknown`.
+
 ## 2.2.21 — 2026-11-20
 
 Spec v2.2.21 audit release: the new Fax API and one breaking wire fix.

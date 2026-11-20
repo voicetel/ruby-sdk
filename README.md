@@ -150,16 +150,18 @@ Responses come back as immutable `Data` model classes (`VoiceTel::Models::...`) 
 
 All HTTP errors raise `VoiceTel::ApiError`. The `kind` attribute is a Symbol; convenience predicates are exposed for readability:
 
-| Status | `kind`                | Predicate                |
-|--------|-----------------------|--------------------------|
-| 400    | `:bad_request`        | `err.bad_request?`       |
-| 401    | `:authentication`     | `err.authentication?`    |
-| 403    | `:permission_denied`  | `err.permission_denied?` |
-| 404    | `:not_found`          | `err.not_found?`         |
-| 409    | `:conflict`           | `err.conflict?`          |
-| 429    | `:rate_limit`         | `err.rate_limit?`        |
-| 5xx    | `:server`             | `err.server?`            |
-| other  | `:unknown`            | `err.unknown?`           |
+| Status | `kind`                  | Predicate                    |
+|--------|-------------------------|------------------------------|
+| 400    | `:bad_request`          | `err.bad_request?`           |
+| 401    | `:authentication`       | `err.authentication?`        |
+| 402    | `:insufficient_balance` | `err.insufficient_balance?`  |
+| 403    | `:permission_denied`    | `err.permission_denied?`     |
+| 404    | `:not_found`            | `err.not_found?`             |
+| 409    | `:conflict`             | `err.conflict?`              |
+| 413    | `:payload_too_large`    | `err.payload_too_large?`     |
+| 429    | `:rate_limit`           | `err.rate_limit?`            |
+| 5xx    | `:server`               | `err.server?`                |
+| other  | `:unknown`              | `err.unknown?`               |
 
 ```ruby
 begin
