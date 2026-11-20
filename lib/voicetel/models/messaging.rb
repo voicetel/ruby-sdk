@@ -5,9 +5,11 @@ require_relative "base"
 module VoiceTel
   module Models
     # ------------------------------------------------------------- requests ---
-    # Body for POST /v2.2/messages — send an SMS or MMS. media_urls switches
-    # the message type to MMS (and unlocks subject). Note the wire field
-    # names fromNumber / toNumber.
+    # Body for POST /v2.2/messages — send an SMS or MMS. text may be omitted
+    # for a media-only MMS (max 2048 chars for MMS). subject is deprecated
+    # (still accepted). media_urls switches the message type to MMS and must
+    # be a non-empty array of http(s) URLs. Note the wire field names
+    # fromNumber / toNumber.
     MessageSendRequest = Data.define(
       :from_number, :to_number, :text, :subject, :media_urls
     ) do
@@ -35,11 +37,22 @@ module VoiceTel
     # ------------------------------------------------------ response data ---
     # Per-record fields inside MessageRecord. Shape varies by type:
     # sms/mms populate source_number, destination_number, direction, rate,
-    # message; dlr populates source_number and destination_number only.
+    # message (empty for a media-only MMS); dlr populates source_number and
+    # destination_number plus message_text, transaction_guid and (on some
+    # multi-part receipts) concatenated_message; mms adds attachments (one
+    # object per inbound media file) and subject; outbound sms carries ip,
+    # the address the send request came from. transaction_guid keeps the
+    # wire's GUID capitalization via wire_keys.
     MessageRecordValue = Data.define(
-      :source_number, :destination_number, :direction, :rate, :number, :message
+      :source_number, :destination_number, :direction, :rate, :number, :message,
+      :message_text, :transaction_guid, :concatenated_message, :attachments,
+      :subject, :ip
     ) do
       extend Base
+
+      def self.wire_keys
+        { transaction_guid: "transactionGUID" }
+      end
     end
 
     # One row in MessageHistoryData.messages. key is a composite range key —

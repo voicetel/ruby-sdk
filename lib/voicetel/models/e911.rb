@@ -21,7 +21,7 @@ module VoiceTel
     end
 
     # Body for PUT /v2.2/e911/{dn} — provision using a previously-validated
-    # addressid from POST /v2.2/e911/validations.
+    # addressid (a hex string) from POST /v2.2/e911/validations.
     E911ProvisionByIdRequest = Data.define(:callername, :addressid) do
       include Request
     end
@@ -34,8 +34,9 @@ module VoiceTel
       extend Base
     end
 
-    # Validation result from POST /v2.2/e911/validations. addressid is
-    # passed to E911ProvisionByIdRequest to provision the address.
+    # Validation result from POST /v2.2/e911/validations. addressid is a
+    # hex string; it is passed to E911ProvisionByIdRequest to provision the
+    # address.
     E911ValidatedAddress = Data.define(
       :addressid, :address1, :address2, :city, :state, :zip
     ) do

@@ -38,6 +38,22 @@ RSpec.describe VoiceTel::Resources::INumbering do
     expect(result.numbers_ordered).to eq(["2015550123"])
   end
 
+  it "reports the route each ordered number was placed on" do
+    stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/orders")
+      .with(body: { numbers: [{ number: "2015550100" }, { number: "2015550123", route: 7 }] }.to_json)
+      .to_return(status: 201, body: envelope(orderId: "O125", amountCharged: 2.5,
+                                             numbersOrdered: %w[2015550100 2015550123], failed: [],
+                                             routes: [{ number: "2015550100", route: 4 },
+                                                      { number: "2015550123", route: 7 }]))
+    result = client.i_numbering.order(
+      numbers: [{ number: "2015550100" }, { number: "2015550123", route: 7 }]
+    )
+    expect(result.routes).to all(be_a(VoiceTel::Models::OrderRoute))
+    expect(result.routes.first.number).to eq("2015550100")
+    expect(result.routes.first.route).to eq(4)
+    expect(result.routes.last.route).to eq(7)
+  end
+
   it "serializes OrderNumberSpec entries inside an order body" do
     stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/orders")
       .with(body: { numbers: [{ number: "2015550123", route: 4 }] }.to_json)

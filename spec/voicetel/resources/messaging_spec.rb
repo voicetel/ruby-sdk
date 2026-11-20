@@ -30,6 +30,41 @@ RSpec.describe VoiceTel::Resources::Messaging do
     expect(result.parts).to eq(1)
   end
 
+  it "POSTs a media-only MMS without text" do
+    stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/messages")
+      .with(body: { fromNumber: "2015550100", toNumber: "2015550123",
+                     mediaUrls: ["https://cdn.example.test/logo.png"] }.to_json)
+      .to_return(status: 200, body: envelope(id: "mms1", type: "mms", fromNumber: "2015550100",
+                                             toNumber: "2015550123", parts: 1))
+    result = client.messaging.send_message(
+      from_number: "2015550100", to_number: "2015550123",
+      media_urls: ["https://cdn.example.test/logo.png"]
+    )
+    expect(result.type).to eq("mms")
+  end
+
+  it "reads the v2.2.18+ nullable history fields, including transactionGUID" do
+    stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/messages")
+      .with(query: { number: "2015550123" })
+      .to_return(
+        status: 200,
+        body: envelope(number: "2015550123", type: "dlr", fromTs: 0, toTs: 0,
+                       messages: [{ id: "r1", key: %w[1000000001 2015550123 1_769_000_000],
+                                   value: { sourceNumber: "2015550100", number: "2015550123",
+                                            messageText: "DELIV", transactionGUID: "msg_1",
+                                            concatenatedMessage: nil, attachments: nil,
+                                            subject: nil, ip: "203.0.113.7" } }])
+      )
+    result = client.messaging.history(number: "2015550123")
+    value = result.messages.first.value
+    expect(value.message_text).to eq("DELIV")
+    expect(value.transaction_guid).to eq("msg_1")
+    expect(value.concatenated_message).to be_nil
+    expect(value.attachments).to be_nil
+    expect(value.subject).to be_nil
+    expect(value.ip).to eq("203.0.113.7")
+  end
+
   it "POSTs create_brand" do
     stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/messaging/brands")
       .with(body: { messagingBrandId: "B1", messagingBrandName: "Acme" }.to_json)

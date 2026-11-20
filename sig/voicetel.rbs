@@ -352,8 +352,8 @@ module VoiceTel
 
     class E911ProvisionByIdRequest
       attr_reader callername: String
-      attr_reader addressid: Integer
-      def initialize: (callername: String, addressid: Integer) -> void
+      attr_reader addressid: String
+      def initialize: (callername: String, addressid: String) -> void
       def to_payload: () -> Hash[Symbol, untyped]
     end
 
@@ -369,7 +369,7 @@ module VoiceTel
     end
 
     class E911ValidatedAddress
-      attr_reader addressid: Integer
+      attr_reader addressid: String
       attr_reader address1: String
       attr_reader address2: String?
       attr_reader city: String
@@ -583,7 +583,14 @@ module VoiceTel
       attr_reader amount_charged: Float
       attr_reader numbers_ordered: Array[String]
       attr_reader failed: Array[OrderFailedEntry]
+      attr_reader routes: Array[OrderRoute]
       def self.build: (untyped payload) -> OrderCreateData?
+    end
+
+    class OrderRoute
+      attr_reader number: String
+      attr_reader route: Integer
+      def self.build: (untyped payload) -> OrderRoute?
     end
 
     class PortListData
@@ -644,15 +651,30 @@ module VoiceTel
       def self.build: (untyped payload) -> LrnLookupData?
     end
 
+    class CarrierDetails
+      attr_reader name: String?
+      attr_reader type: String?
+      attr_reader mobile_country_code: String?
+      attr_reader mobile_network_code: String?
+      attr_reader error_code: Integer?
+      def self.build: (untyped payload) -> CarrierDetails?
+    end
+
+    class CarrierData
+      attr_reader number: String
+      attr_reader carrier: CarrierDetails
+      def self.build: (untyped payload) -> CarrierData?
+    end
+
     # ---- messaging ----
 
     class MessageSendRequest
       attr_reader from_number: String
       attr_reader to_number: String
-      attr_reader text: String
+      attr_reader text: String?
       attr_reader subject: String?
       attr_reader media_urls: Array[String]?
-      def initialize: (from_number: String, to_number: String, text: String, subject: String?,
+      def initialize: (from_number: String, to_number: String, text: String?, subject: String?,
                        media_urls: Array[String]?) -> void
       def to_payload: () -> Hash[Symbol, untyped]
     end
@@ -684,6 +706,12 @@ module VoiceTel
       attr_reader rate: String?
       attr_reader number: String?
       attr_reader message: String?
+      attr_reader message_text: String?
+      attr_reader transaction_guid: String?
+      attr_reader concatenated_message: String?
+      attr_reader attachments: Array[Hash[untyped, untyped]]?
+      attr_reader subject: String?
+      attr_reader ip: String?
       def self.build: (untyped payload) -> MessageRecordValue?
     end
 
@@ -1009,6 +1037,53 @@ module VoiceTel
       def self.build: (untyped payload) -> PortOutPinUpdateData?
     end
 
+    class DirectoryListingRequest
+      attr_reader type: String
+      attr_reader name: String?
+      attr_reader first_name: String?
+      attr_reader last_name: String?
+      attr_reader street_number: String?
+      attr_reader street_name: String?
+      attr_reader street_type: String?
+      attr_reader street_suffix: String?
+      attr_reader location: String?
+      attr_reader city: String
+      attr_reader state: String
+      attr_reader zip: String
+      def initialize: (type: String, name: String?, first_name: String?, last_name: String?,
+                       street_number: String?, street_name: String?, street_type: String?,
+                       street_suffix: String?, location: String?, city: String, state: String,
+                       zip: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class DirectoryListing
+      attr_reader type: String
+      attr_reader name: String?
+      attr_reader first_name: String?
+      attr_reader last_name: String?
+      attr_reader street_number: String?
+      attr_reader street_name: String?
+      attr_reader street_type: String?
+      attr_reader street_suffix: String?
+      attr_reader location: String?
+      attr_reader city: String?
+      attr_reader state: String?
+      attr_reader zip: String?
+      attr_reader complex: bool?
+      def self.build: (untyped payload) -> DirectoryListing?
+    end
+
+    class DirectoryListingData
+      attr_reader number: String
+      attr_reader status: String
+      attr_reader eligible: bool?
+      attr_reader listing: DirectoryListing?
+      attr_reader pending: DirectoryListing?
+      attr_reader order_id: String?
+      def self.build: (untyped payload) -> DirectoryListingData?
+    end
+
     # ---- support ----
 
     class TicketCreateRequest
@@ -1310,6 +1385,7 @@ module VoiceTel
 
     class Lookups < Base
       def cnam: (String number) -> Models::CnamData
+      def carrier: (String number) -> Models::CarrierData
       def lrn: (String number, String ani) -> Models::LrnLookupData
     end
 
@@ -1347,6 +1423,9 @@ module VoiceTel
       def unassign_campaign: (String number, campaign_id: String) -> Models::NumberMessagingCampaignUnassignData
       def bulk_unassign_campaign: (numbers: Array[String], campaign_id: String) -> Models::NumbersMessagingCampaignUnassignData
       def set_port_out_pin: (String number, untyped body) -> Models::PortOutPinUpdateData
+      def get_directory_listing: (String number) -> Models::DirectoryListingData
+      def set_directory_listing: (String number, untyped body) -> Models::DirectoryListingData
+      def remove_directory_listing: (String number) -> Models::DirectoryListingData
     end
 
     class Support < Base

@@ -7,10 +7,12 @@ module VoiceTel
     # NumbersService — every operation on a TN owned by the account.
     #
     # Most methods take the 10-digit TN as the first argument. Methods that
-    # return 204 No Content return nil. The two exceptions in this resource
-    # — DELETE /v2.2/numbers/{n}/messaging-campaign and
-    # DELETE /v2.2/numbers/messaging-campaign — return 200 with a body and
-    # are exposed via #unassign_campaign and #bulk_unassign_campaign.
+    # return 204 No Content return nil. The exceptions in this resource —
+    # DELETE /v2.2/numbers/{n}/messaging-campaign and
+    # DELETE /v2.2/numbers/messaging-campaign (200 with a body) and
+    # DELETE /v2.2/numbers/{n}/directory-listing (202, applied in the
+    # background) — return a body and are exposed via #unassign_campaign,
+    # #bulk_unassign_campaign and #remove_directory_listing.
     class Numbers < Base
       # GET /v2.2/numbers — every TN on the account.
       #
@@ -213,6 +215,42 @@ module VoiceTel
       def set_port_out_pin(number, body)
         Models::PortOutPinUpdateData.build(
           @transport.request(:patch, "/v2.2/numbers/#{escape_path(number)}/port-out-pin", body: payload(body))
+        )
+      end
+
+      # GET /v2.2/numbers/{number}/directory-listing — the 411 listing
+      # state as published: status (listed / not_listed / pending /
+      # removing / unavailable), eligible, the published listing and any
+      # pending submission.
+      #
+      # @return [Models::DirectoryListingData]
+      def get_directory_listing(number)
+        Models::DirectoryListingData.build(
+          @transport.request(:get, "/v2.2/numbers/#{escape_path(number)}/directory-listing")
+        )
+      end
+
+      # PUT /v2.2/numbers/{number}/directory-listing — add or replace the
+      # 411 listing. Accepted at once and applied in the background: returns
+      # HTTP 202 with status "pending" and the carrier order reference in
+      # order_id; poll #get_directory_listing until it settles.
+      #
+      # @return [Models::DirectoryListingData]
+      def set_directory_listing(number, body)
+        Models::DirectoryListingData.build(
+          @transport.request(:put, "/v2.2/numbers/#{escape_path(number)}/directory-listing", body: payload(body))
+        )
+      end
+
+      # DELETE /v2.2/numbers/{number}/directory-listing — remove the
+      # published listing, or cancel a pending add. Returns 202 with a body
+      # (status "removing" with an order_id, or "not_listed" when a pending
+      # add was cancelled), not 204.
+      #
+      # @return [Models::DirectoryListingData]
+      def remove_directory_listing(number)
+        Models::DirectoryListingData.build(
+          @transport.request(:delete, "/v2.2/numbers/#{escape_path(number)}/directory-listing")
         )
       end
     end
