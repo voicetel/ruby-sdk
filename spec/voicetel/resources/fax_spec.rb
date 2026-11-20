@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "tempfile"
+
 RSpec.describe VoiceTel::Resources::Fax do
   let(:client) { new_client }
   let(:pdf) { "%PDF-1.4 fax document bytes" }
