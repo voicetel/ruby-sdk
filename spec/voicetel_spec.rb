@@ -3,8 +3,8 @@
 RSpec.describe VoiceTel do
   describe "module constants" do
     it "tracks the API version" do
-      expect(described_class::VERSION).to eq("2.2.17")
-      expect(described_class::API_VERSION).to eq("v2.2.17")
+      expect(described_class::VERSION).to eq("2.2.21")
+      expect(described_class::API_VERSION).to eq("v2.2.21")
       expect(described_class::DEFAULT_BASE_URL).to eq("https://api.voicetel.com")
     end
 
@@ -26,9 +26,9 @@ RSpec.describe VoiceTel do
       expect(c.base_url).to eq(VoiceTel::DEFAULT_BASE_URL)
     end
 
-    it "exposes ten memoized resource accessors" do
+    it "exposes eleven memoized resource accessors" do
       c = described_class.new(api_key: "abc")
-      %i[account acl authentication e911 gateways i_numbering lookups messaging numbers support].each do |name|
+      %i[account acl authentication e911 fax gateways i_numbering lookups messaging numbers support].each do |name|
         first = c.public_send(name)
         second = c.public_send(name)
         expect(first).to be(second)

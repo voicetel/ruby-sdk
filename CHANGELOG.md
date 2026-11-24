@@ -1,5 +1,38 @@
 # Changelog
 
+## 2.2.21 — 2026-11-20
+
+Spec v2.2.21 audit release: the new Fax API and one breaking wire fix.
+
+### Added
+- `:insufficient_balance` (HTTP 402 — fax send, directory listing) and `:payload_too_large` (HTTP 413 — fax documents over 8 MiB) error kinds, with the usual `ApiError#insufficient_balance?` / `#payload_too_large?` predicates. Both previously fell through to `:unknown`.
+- **Fax API** (5 operations, tag `Fax`): `client.fax`
+  - `numbers` — `GET /v2.2/numbers/fax`: every fax-capable number on the account with the email faxes to it deliver to (`destination_id` 0 = the account email).
+  - `send_fax(from_number:, to_number:, documents:, idempotency_key:)` — `POST /v2.2/faxes` (HTTP 201): **multipart/form-data** with `fromNumber`/`toNumber` text fields and 1–10 `documents` file parts (PDF/DOC/DOCX, magic-byte checked server-side, 8 MiB each and in total). Idempotent per the client-generated **UUID `Idempotency-Key`** — a fresh one is generated when omitted; pass the same key with the same documents to get the original job back instead of a second send. Documents are part hashes (`name`, `content` as raw bytes, optional `content_type` — guessed from the name) or bare file paths. Rate-limited to 10 sends/minute/account. Returns `Models::FaxSendData`.
+  - `history(number:, from:, to:, limit:, cursor:, status:)` — `GET /v2.2/faxes`: cursor-paged jobs newest first (`Models::FaxHistoryData` / `Models::FaxJob`); `from`/`to` are unix seconds (from is the newer edge; defaults to the last 24 hours).
+  - `get(id)` — `GET /v2.2/faxes/{id}`: one job (`Models::FaxJob`); poll until `status` is `"sent"` or `"failed"`.
+  - `document(id)` — `GET /v2.2/faxes/{id}/document`: the rendered PDF as **raw bytes** (binary response, not parsed). Served when the job reports `document_available` true.
+- Transport: a multipart/form-data request path (hand-built body, no new dependency), an `idempotency_key:` override for the auto-generated `Idempotency-Key`, and a `raw:` response mode for binary downloads.
+- The fax error envelope adds `serverTime` beside `status`/`error` — parsed tolerantly (exposed on `ApiError#body`).
+
+### Changed
+- **Breaking**: `client.acl.remove` now sends the same JSON body as `add` — `{ acl: [{ cidr: "203.0.113.0/24" }] }` — instead of the removed `cidrs` query parameter (the server's v2.2.0 rewrite reads the body only). 409 bodies still carry `data.removed` / `data.failed` on `ApiError#body`.
+
+## 2.2.20 — 2026-11-20
+
+Spec v2.2.20 sync. Adds the four new operations and tracks the truth fixes from spec v2.2.18–v2.2.20.
+
+### Added
+- **Directory listing (411)** on a number: `client.numbers.get_directory_listing(number)`, `.set_directory_listing(number, body)`, `.remove_directory_listing(number)` — GET returns the published state (`listed` / `not_listed` / `pending` / `removing` / `unavailable`, `eligible`, `listing`, `pending`); PUT/DELETE are accepted at once (HTTP 202, applied in the background) with an `order_id`. The DELETE is one of the few that returns a body.
+- **Carrier & line-type lookup**: `client.lookups.carrier(number)` — `Models::CarrierDetails` keeps the upstream field names (`mobile_country_code`, `mobile_network_code`, `error_code`, snake_case on the wire); billed per lookup at the account's CNAM rate.
+- `Models::OrderCreateData.routes` — POST /v2.2/orders now returns the route each ordered number was placed on (`Models::OrderRoute`).
+
+### Changed
+- e911 `addressid` is a **string** (hex), not an integer, on both the validation response and `E911ProvisionByIdRequest`.
+- `MessageSendRequest.text` is optional (media-only MMS is valid); `subject` is deprecated; `media_urls` must be non-empty.
+- Message-history `value` records carry the full field set: `message_text`, `transaction_guid`, `concatenated_message` (dlr), `attachments`, `subject` (mms), `ip` (outbound sms).
+- DID `route` fields accept any gateway id on the account in addition to the global routes; an unknown route is rejected by the API with 400.
+
 ## 2.2.17 — 2026-10-17
 
 Spec v2.2.17 sync.

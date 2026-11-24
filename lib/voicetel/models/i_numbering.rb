@@ -11,9 +11,10 @@ module VoiceTel
       include Request
     end
 
-    # Per-number routing override inside OrderCreateRequest. route is the
-    # global route type for numbers in this order: 1 USER, 2 T30,
-    # 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE.
+    # Per-number routing override inside OrderCreateRequest. route is a
+    # gateway id on this account or a global route for numbers in this
+    # order: 1 USER, 2 T30, 3 VOICE_BRIDGE, 4 DID (default), 5 T38,
+    # 6 VOICEML, 8 SDN, 9 MOBILE. The API returns 400 for an unknown route.
     OrderNumberSpec = Data.define(:number, :route) do
       include Request
     end
@@ -99,13 +100,20 @@ module VoiceTel
       extend Base
     end
 
+    # One row in OrderCreateData.routes — the route each ordered number was
+    # placed on (a gateway id or a global route).
+    OrderRoute = Data.define(:number, :route) do
+      extend Base
+    end
+
     # Data payload from POST /v2.2/orders. amount_charged is the amount
-    # deducted from the account balance.
-    OrderCreateData = Data.define(:order_id, :amount_charged, :numbers_ordered, :failed) do
+    # deducted from the account balance. routes reports the route each
+    # ordered number was placed on.
+    OrderCreateData = Data.define(:order_id, :amount_charged, :numbers_ordered, :failed, :routes) do
       extend Base
 
       def self.nested
-        { failed: OrderFailedEntry }
+        { failed: OrderFailedEntry, routes: OrderRoute }
       end
     end
 

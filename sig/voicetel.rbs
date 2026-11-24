@@ -24,9 +24,11 @@ module VoiceTel
 
     def bad_request?: () -> bool
     def authentication?: () -> bool
+    def insufficient_balance?: () -> bool
     def permission_denied?: () -> bool
     def not_found?: () -> bool
     def conflict?: () -> bool
+    def payload_too_large?: () -> bool
     def rate_limit?: () -> bool
     def server?: () -> bool
     def unknown?: () -> bool
@@ -352,8 +354,8 @@ module VoiceTel
 
     class E911ProvisionByIdRequest
       attr_reader callername: String
-      attr_reader addressid: Integer
-      def initialize: (callername: String, addressid: Integer) -> void
+      attr_reader addressid: String
+      def initialize: (callername: String, addressid: String) -> void
       def to_payload: () -> Hash[Symbol, untyped]
     end
 
@@ -369,7 +371,7 @@ module VoiceTel
     end
 
     class E911ValidatedAddress
-      attr_reader addressid: Integer
+      attr_reader addressid: String
       attr_reader address1: String
       attr_reader address2: String?
       attr_reader city: String
@@ -391,6 +393,63 @@ module VoiceTel
     class E911ValidateData
       attr_reader address: E911ValidatedAddress
       def self.build: (untyped payload) -> E911ValidateData?
+    end
+
+    # ---- fax ----
+
+    class FaxNumberEntry
+      attr_reader number: String?
+      attr_reader destination_id: Integer?
+      attr_reader email: String?
+      def self.build: (untyped payload) -> FaxNumberEntry?
+    end
+
+    class FaxNumbersData
+      attr_reader numbers: Array[FaxNumberEntry]
+      def self.build: (untyped payload) -> FaxNumbersData?
+    end
+
+    class FaxDocumentMeta
+      attr_reader name: String?
+      attr_reader size: Integer?
+      attr_reader content_type: String?
+      def self.build: (untyped payload) -> FaxDocumentMeta?
+    end
+
+    class FaxSendData
+      attr_reader id: String?
+      attr_reader from_number: String?
+      attr_reader to_number: String?
+      attr_reader status: String?
+      attr_reader documents: Array[FaxDocumentMeta]
+      def self.build: (untyped payload) -> FaxSendData?
+    end
+
+    class FaxJob
+      attr_reader id: String?
+      attr_reader from_number: String?
+      attr_reader to_number: String?
+      attr_reader client_token: String?
+      attr_reader status: String?
+      attr_reader submitted_at: String?
+      attr_reader started_at: String?
+      attr_reader completed_at: String?
+      attr_reader attempts: Integer?
+      attr_reader failure_reason: String?
+      attr_reader documents: Array[FaxDocumentMeta]
+      attr_reader document_available: bool?
+      attr_reader document_name: String?
+      attr_reader document_size: Integer?
+      def self.build: (untyped payload) -> FaxJob?
+    end
+
+    class FaxHistoryData
+      attr_reader number: String?
+      attr_reader from_ts: Integer?
+      attr_reader to_ts: Integer?
+      attr_reader faxes: Array[FaxJob]
+      attr_reader next_cursor: String?
+      def self.build: (untyped payload) -> FaxHistoryData?
     end
 
     # ---- gateways ----
@@ -583,7 +642,14 @@ module VoiceTel
       attr_reader amount_charged: Float
       attr_reader numbers_ordered: Array[String]
       attr_reader failed: Array[OrderFailedEntry]
+      attr_reader routes: Array[OrderRoute]
       def self.build: (untyped payload) -> OrderCreateData?
+    end
+
+    class OrderRoute
+      attr_reader number: String
+      attr_reader route: Integer
+      def self.build: (untyped payload) -> OrderRoute?
     end
 
     class PortListData
@@ -644,15 +710,30 @@ module VoiceTel
       def self.build: (untyped payload) -> LrnLookupData?
     end
 
+    class CarrierDetails
+      attr_reader name: String?
+      attr_reader type: String?
+      attr_reader mobile_country_code: String?
+      attr_reader mobile_network_code: String?
+      attr_reader error_code: Integer?
+      def self.build: (untyped payload) -> CarrierDetails?
+    end
+
+    class CarrierData
+      attr_reader number: String
+      attr_reader carrier: CarrierDetails
+      def self.build: (untyped payload) -> CarrierData?
+    end
+
     # ---- messaging ----
 
     class MessageSendRequest
       attr_reader from_number: String
       attr_reader to_number: String
-      attr_reader text: String
+      attr_reader text: String?
       attr_reader subject: String?
       attr_reader media_urls: Array[String]?
-      def initialize: (from_number: String, to_number: String, text: String, subject: String?,
+      def initialize: (from_number: String, to_number: String, text: String?, subject: String?,
                        media_urls: Array[String]?) -> void
       def to_payload: () -> Hash[Symbol, untyped]
     end
@@ -684,6 +765,12 @@ module VoiceTel
       attr_reader rate: String?
       attr_reader number: String?
       attr_reader message: String?
+      attr_reader message_text: String?
+      attr_reader transaction_guid: String?
+      attr_reader concatenated_message: String?
+      attr_reader attachments: Array[Hash[untyped, untyped]]?
+      attr_reader subject: String?
+      attr_reader ip: String?
       def self.build: (untyped payload) -> MessageRecordValue?
     end
 
@@ -1009,6 +1096,53 @@ module VoiceTel
       def self.build: (untyped payload) -> PortOutPinUpdateData?
     end
 
+    class DirectoryListingRequest
+      attr_reader type: String
+      attr_reader name: String?
+      attr_reader first_name: String?
+      attr_reader last_name: String?
+      attr_reader street_number: String?
+      attr_reader street_name: String?
+      attr_reader street_type: String?
+      attr_reader street_suffix: String?
+      attr_reader location: String?
+      attr_reader city: String
+      attr_reader state: String
+      attr_reader zip: String
+      def initialize: (type: String, name: String?, first_name: String?, last_name: String?,
+                       street_number: String?, street_name: String?, street_type: String?,
+                       street_suffix: String?, location: String?, city: String, state: String,
+                       zip: String) -> void
+      def to_payload: () -> Hash[Symbol, untyped]
+    end
+
+    class DirectoryListing
+      attr_reader type: String
+      attr_reader name: String?
+      attr_reader first_name: String?
+      attr_reader last_name: String?
+      attr_reader street_number: String?
+      attr_reader street_name: String?
+      attr_reader street_type: String?
+      attr_reader street_suffix: String?
+      attr_reader location: String?
+      attr_reader city: String?
+      attr_reader state: String?
+      attr_reader zip: String?
+      attr_reader complex: bool?
+      def self.build: (untyped payload) -> DirectoryListing?
+    end
+
+    class DirectoryListingData
+      attr_reader number: String
+      attr_reader status: String
+      attr_reader eligible: bool?
+      attr_reader listing: DirectoryListing?
+      attr_reader pending: DirectoryListing?
+      attr_reader order_id: String?
+      def self.build: (untyped payload) -> DirectoryListingData?
+    end
+
     # ---- support ----
 
     class TicketCreateRequest
@@ -1230,7 +1364,8 @@ module VoiceTel
 
       def request: (
         Symbol method, String path,
-        ?query: Hash[untyped, untyped]?, ?body: untyped, ?require_auth: bool
+        ?query: Hash[untyped, untyped]?, ?body: untyped, ?require_auth: bool,
+        ?multipart: Hash[untyped, untyped]?, ?idempotency_key: String?, ?raw: bool
       ) -> untyped
 
       def camelize_keys: (untyped) -> untyped
@@ -1261,7 +1396,7 @@ module VoiceTel
     class Acl < Base
       def list: () -> Models::AclListData
       def add: (untyped body) -> Models::AclAddData
-      def remove: (cidrs: Array[String] | String) -> Models::AclRemoveData
+      def remove: (untyped body) -> Models::AclRemoveData
     end
 
     class Authentication < Base
@@ -1281,6 +1416,24 @@ module VoiceTel
       def get: (String dn) -> Models::E911RecordData
       def provision: (String dn, untyped body) -> Models::E911RecordData
       def remove: (String dn) -> nil
+    end
+
+    class Fax < Base
+      CONTENT_TYPES: Hash[String, String]
+
+      def numbers: () -> Models::FaxNumbersData
+      def send_fax: (
+        from_number: String, to_number: String,
+        documents: Array[Hash[untyped, untyped] | String],
+        ?idempotency_key: String?
+      ) -> Models::FaxSendData
+      def history: (
+        number: String,
+        ?from: Integer?, ?to: Integer?, ?limit: Integer?,
+        ?cursor: String?, ?status: String?
+      ) -> Models::FaxHistoryData
+      def get: (String id) -> Models::FaxJob
+      def document: (String id) -> String
     end
 
     class Gateways < Base
@@ -1310,6 +1463,7 @@ module VoiceTel
 
     class Lookups < Base
       def cnam: (String number) -> Models::CnamData
+      def carrier: (String number) -> Models::CarrierData
       def lrn: (String number, String ani) -> Models::LrnLookupData
     end
 
@@ -1347,6 +1501,9 @@ module VoiceTel
       def unassign_campaign: (String number, campaign_id: String) -> Models::NumberMessagingCampaignUnassignData
       def bulk_unassign_campaign: (numbers: Array[String], campaign_id: String) -> Models::NumbersMessagingCampaignUnassignData
       def set_port_out_pin: (String number, untyped body) -> Models::PortOutPinUpdateData
+      def get_directory_listing: (String number) -> Models::DirectoryListingData
+      def set_directory_listing: (String number, untyped body) -> Models::DirectoryListingData
+      def remove_directory_listing: (String number) -> Models::DirectoryListingData
     end
 
     class Support < Base
@@ -1376,6 +1533,7 @@ module VoiceTel
     def acl: () -> Resources::Acl
     def authentication: () -> Resources::Authentication
     def e911: () -> Resources::E911
+    def fax: () -> Resources::Fax
     def gateways: () -> Resources::Gateways
     def i_numbering: () -> Resources::INumbering
     def lookups: () -> Resources::Lookups

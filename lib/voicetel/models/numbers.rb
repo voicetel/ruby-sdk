@@ -5,16 +5,17 @@ require_relative "base"
 module VoiceTel
   module Models
     # ------------------------------------------------------------- requests ---
-    # Body for POST /v2.2/numbers. route is the global route type: 1 USER,
-    # 2 T30, 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN,
-    # 9 MOBILE.
+    # Body for POST /v2.2/numbers. route is a gateway id on this account
+    # (GET /v2.2/gateways) or a global route: 1 USER, 2 T30, 3 VOICE_BRIDGE,
+    # 4 DID (default), 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE. The API returns
+    # 400 for an unknown route.
     NumberAddRequest = Data.define(:number, :route) do
       include Request
     end
 
-    # Body for PUT /v2.2/numbers/{number}/route. route is the global route
-    # type: 1 USER, 2 T30, 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML,
-    # 8 SDN, 9 MOBILE.
+    # Body for PUT /v2.2/numbers/{number}/route. route is a gateway id on
+    # this account or a global route: 1 USER, 2 T30, 3 VOICE_BRIDGE,
+    # 4 DID (default), 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE.
     NumberRouteRequest = Data.define(:route) do
       include Request
     end
@@ -66,9 +67,25 @@ module VoiceTel
     end
 
     # Body for PATCH /v2.2/numbers/{number} — move to another account. route
-    # is the global route type on the destination account: 1 USER, 2 T30,
-    # 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE.
+    # is a gateway id on the destination account or a global route: 1 USER,
+    # 2 T30, 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN,
+    # 9 MOBILE.
     NumberMoveRequest = Data.define(:account_id, :route) do
+      include Request
+    end
+
+    # Body for PUT /v2.2/numbers/{number}/directory-listing — add or replace
+    # the 411 listing. type is "business" (requires name, <=60 chars) or
+    # "residence" (requires first_name and last_name, <=30 each); the B / R
+    # shorthand is also accepted by the server. city (<=40), state (2-letter
+    # US state/territory) and zip (5 digits; ZIP+4 accepted, stored as 5) are
+    # required. street_number and street_name come as a pair or not at all;
+    # street_suffix and location require street_name. Letters, numbers,
+    # spaces and & ' . , # / - are allowed in the text fields.
+    DirectoryListingRequest = Data.define(
+      :type, :name, :first_name, :last_name, :street_number, :street_name,
+      :street_type, :street_suffix, :location, :city, :state, :zip
+    ) do
       include Request
     end
 
@@ -79,12 +96,23 @@ module VoiceTel
 
     # ------------------------------------------------- entities & data ---
     # Per-number routing / feature state. Returned by GET /v2.2/numbers and
-    # GET /v2.2/numbers/{number}. route is the global route type: 1 USER,
-    # 2 T30, 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN,
-    # 9 MOBILE.
+    # GET /v2.2/numbers/{number}. route is a gateway id on this account or a
+    # global route: 1 USER, 2 T30, 3 VOICE_BRIDGE, 4 DID (default), 5 T38,
+    # 6 VOICEML, 8 SDN, 9 MOBILE.
     NumberDetail = Data.define(
       :number, :translated, :route, :gateway, :cnam, :forward, :forward_to, :carrier,
       :sms_enabled, :fax_enabled
+    ) do
+      extend Base
+    end
+
+    # A 411 directory listing as published (or, on PUT, as submitted).
+    # type is "B" (business — name) or "R" (residence — first_name +
+    # last_name); address fields may be empty strings. complex marks a
+    # multi-line listing; read-only through the API.
+    DirectoryListing = Data.define(
+      :type, :name, :first_name, :last_name, :street_number, :street_name,
+      :street_type, :street_suffix, :location, :city, :state, :zip, :complex
     ) do
       extend Base
     end
@@ -122,9 +150,10 @@ module VoiceTel
       end
     end
 
-    # Data payload from POST /v2.2/numbers. route is the global route type
-    # that was installed: 1 USER, 2 T30, 3 VOICE_BRIDGE, 4 DID (default),
-    # 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE.
+    # Data payload from POST /v2.2/numbers. route is the route that was
+    # installed: a gateway id on this account or a global route (1 USER,
+    # 2 T30, 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN,
+    # 9 MOBILE).
     NumberAddData = Data.define(:number, :route) do
       extend Base
     end
@@ -155,16 +184,17 @@ module VoiceTel
       extend Base
     end
 
-    # Data payload from PATCH /v2.2/numbers/{number}. route is the global
-    # route type on the destination account: 1 USER, 2 T30, 3 VOICE_BRIDGE,
-    # 4 DID (default), 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE.
+    # Data payload from PATCH /v2.2/numbers/{number}. route is the route on
+    # the destination account: a gateway id or a global route (1 USER, 2 T30,
+    # 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE).
     NumberMoveData = Data.define(:number, :account_id, :route) do
       extend Base
     end
 
     # Data payload from PUT /v2.2/numbers/{number}/route. route echoes the
-    # applied global route type: 1 USER, 2 T30, 3 VOICE_BRIDGE, 4 DID
-    # (default), 5 T38, 6 VOICEML, 8 SDN, 9 MOBILE.
+    # applied route: a gateway id on this account or a global route (1 USER,
+    # 2 T30, 3 VOICE_BRIDGE, 4 DID (default), 5 T38, 6 VOICEML, 8 SDN,
+    # 9 MOBILE).
     NumberRouteData = Data.define(:number, :route) do
       extend Base
     end
@@ -285,6 +315,25 @@ module VoiceTel
     # unchanged.
     PortOutPinUpdateData = Data.define(:number, :port_out_pin, :changed) do
       extend Base
+    end
+
+    # Data payload from GET/PUT/DELETE /v2.2/numbers/{number}/directory-listing.
+    #
+    # PUT and DELETE are accepted (202) and applied in the background:
+    # status is "pending" / "removing" (or "not_listed" when a pending add
+    # was cancelled — order_id absent) and order_id carries the carrier order
+    # reference. GET reports the state as published: status is one of
+    # "listed", "not_listed", "pending", "removing", "unavailable"; eligible
+    # tells whether a listing can be added; listing is the published listing
+    # and pending a submitted listing not yet published (nil when none).
+    DirectoryListingData = Data.define(
+      :number, :status, :eligible, :listing, :pending, :order_id
+    ) do
+      extend Base
+
+      def self.nested
+        { listing: DirectoryListing, pending: DirectoryListing }
+      end
     end
   end
 end

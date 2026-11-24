@@ -6,9 +6,11 @@ RSpec.describe VoiceTel::ApiError do
       {
         400 => :bad_request,
         401 => :authentication,
+        402 => :insufficient_balance,
         403 => :permission_denied,
         404 => :not_found,
         409 => :conflict,
+        413 => :payload_too_large,
         429 => :rate_limit,
         500 => :server,
         502 => :server,

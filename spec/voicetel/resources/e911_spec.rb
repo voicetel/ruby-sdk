@@ -17,12 +17,12 @@ RSpec.describe VoiceTel::Resources::E911 do
     expect(result.record.dn).to eq("12015550123")
   end
 
-  it "POSTs to validate" do
+  it "POSTs to validate and round-trips the hex string addressid" do
     stub_request(:post, "#{SpecHelpers::BASE_URL}/v2.2/e911/validations")
-      .to_return(status: 200, body: envelope(address: { addressid: 42 }))
+      .to_return(status: 200, body: envelope(address: { addressid: "123a45b678c9d012e3f45a67b890c123" }))
     result = client.e911.validate(address1: "1", city: "Newark", state: "NJ", zip: "07101")
     expect(result).to be_a(VoiceTel::Models::E911ValidateData)
-    expect(result.address.addressid).to eq(42)
+    expect(result.address.addressid).to eq("123a45b678c9d012e3f45a67b890c123")
   end
 
   it "GETs by dn" do
@@ -31,11 +31,11 @@ RSpec.describe VoiceTel::Resources::E911 do
     expect(client.e911.get("2015550123").record.dn).to eq("12015550123")
   end
 
-  it "PUTs provision by dn" do
+  it "PUTs provision by dn with a string addressid" do
     stub_request(:put, "#{SpecHelpers::BASE_URL}/v2.2/e911/2015550123")
-      .with(body: { callername: "X", addressid: 42 }.to_json)
+      .with(body: { callername: "X", addressid: "123a45b678c9d012e3f45a67b890c123" }.to_json)
       .to_return(status: 200, body: envelope(record: { dn: "12015550123" }))
-    client.e911.provision("2015550123", callername: "X", addressid: 42)
+    client.e911.provision("2015550123", callername: "X", addressid: "123a45b678c9d012e3f45a67b890c123")
   end
 
   it "DELETE returns nil on 204" do

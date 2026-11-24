@@ -10,9 +10,11 @@ module VoiceTel
     KINDS = %i[
       bad_request
       authentication
+      insufficient_balance
       permission_denied
       not_found
       conflict
+      payload_too_large
       rate_limit
       server
       unknown
@@ -37,9 +39,11 @@ module VoiceTel
       case status
       when 400 then :bad_request
       when 401 then :authentication
+      when 402 then :insufficient_balance
       when 403 then :permission_denied
       when 404 then :not_found
       when 409 then :conflict
+      when 413 then :payload_too_large
       when 429 then :rate_limit
       when 500..599 then :server
       else :unknown

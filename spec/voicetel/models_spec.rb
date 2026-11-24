@@ -60,6 +60,21 @@ RSpec.describe VoiceTel::Models do
       expect(conversation.ticket_number).to eq(1015)
     end
 
+    it "keeps the upstream snake_case carrier field names" do
+      details = described_class::CarrierDetails.build(
+        { "name" => "EXAMPLE CARRIER", "type" => "mobile",
+          "mobile_country_code" => "310", "mobile_network_code" => "456", "error_code" => nil }
+      )
+      expect(details.mobile_country_code).to eq("310")
+      expect(details.mobile_network_code).to eq("456")
+      expect(details.error_code).to be_nil
+    end
+
+    it "maps transactionGUID onto transaction_guid" do
+      value = described_class::MessageRecordValue.build({ "transactionGUID" => "msg_1" })
+      expect(value.transaction_guid).to eq("msg_1")
+    end
+
     it "keeps undeclared list members as plain values" do
       dca = described_class::CampaignDca.build(
         { "electionComplete" => false, "electedCarriers" => ["AT&T", "Verizon Wireless"], "carriers" => [] }

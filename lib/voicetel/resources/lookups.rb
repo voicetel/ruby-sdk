@@ -4,7 +4,7 @@ require_relative "base"
 
 module VoiceTel
   module Resources
-    # LookupsService — CNAM and LRN dips.
+    # LookupsService — CNAM, carrier & line-type, and LRN dips.
     #
     # Each call costs money; meter accordingly.
     class Lookups < Base
@@ -13,6 +13,16 @@ module VoiceTel
       # @return [Models::CnamData]
       def cnam(number)
         Models::CnamData.build(@transport.request(:get, "/v2.2/cnam/#{escape_path(number)}"))
+      end
+
+      # GET /v2.2/carrier/{number} — carrier and line-type dip. Billed per
+      # lookup at the account's CNAM rate. The carrier object keeps the
+      # upstream lookup's snake_case field names
+      # (mobile_country_code / mobile_network_code / error_code).
+      #
+      # @return [Models::CarrierData]
+      def carrier(number)
+        Models::CarrierData.build(@transport.request(:get, "/v2.2/carrier/#{escape_path(number)}"))
       end
 
       # GET /v2.2/lrn/{number}/{ani} — LRN dip.

@@ -275,6 +275,64 @@ RSpec.describe VoiceTel::Resources::Numbers do
     expect(result.changed).to be(false)
   end
 
+  it "GETs the directory listing as published" do
+    stub_request(:get, "#{SpecHelpers::BASE_URL}/v2.2/numbers/2015550123/directory-listing")
+      .to_return(
+        status: 200,
+        body: envelope(
+          number: "2015550123", status: "listed", eligible: true,
+          listing: { type: "B", name: "Acme Corp", streetNumber: "100", streetName: "Broadway",
+                     streetType: "St", streetSuffix: "", location: "Suite 900",
+                     city: "New York", state: "NY", zip: "10005", complex: false },
+          pending: nil
+        )
+      )
+    result = client.numbers.get_directory_listing("2015550123")
+    expect(result).to be_a(VoiceTel::Models::DirectoryListingData)
+    expect(result.status).to eq("listed")
+    expect(result.eligible).to be(true)
+    expect(result.listing).to be_a(VoiceTel::Models::DirectoryListing)
+    expect(result.listing.type).to eq("B")
+    expect(result.listing.name).to eq("Acme Corp")
+    expect(result.listing.complex).to be(false)
+    expect(result.pending).to be_nil
+  end
+
+  it "PUTs a directory listing and reads the 202 pending body" do
+    stub_request(:put, "#{SpecHelpers::BASE_URL}/v2.2/numbers/2015550123/directory-listing")
+      .with(body: { type: "business", name: "Acme Corp", city: "New York", state: "NY", zip: "10005" }.to_json)
+      .to_return(
+        status: 202,
+        body: envelope(number: "2015550123", status: "pending", orderId: "1026472",
+                       listing: { type: "B", name: "Acme Corp", city: "New York", state: "NY", zip: "10005" })
+      )
+    result = client.numbers.set_directory_listing(
+      "2015550123",
+      type: "business", name: "Acme Corp", city: "New York", state: "NY", zip: "10005"
+    )
+    expect(result).to be_a(VoiceTel::Models::DirectoryListingData)
+    expect(result.status).to eq("pending")
+    expect(result.order_id).to eq("1026472")
+    expect(result.listing.name).to eq("Acme Corp")
+  end
+
+  it "DELETEs a directory listing and reads the 202 removing body" do
+    stub_request(:delete, "#{SpecHelpers::BASE_URL}/v2.2/numbers/2015550123/directory-listing")
+      .to_return(status: 202, body: envelope(number: "2015550123", status: "removing", orderId: "1026473"))
+    result = client.numbers.remove_directory_listing("2015550123")
+    expect(result).to be_a(VoiceTel::Models::DirectoryListingData)
+    expect(result.status).to eq("removing")
+    expect(result.order_id).to eq("1026473")
+  end
+
+  it "cancels a pending directory-listing add (202, no orderId)" do
+    stub_request(:delete, "#{SpecHelpers::BASE_URL}/v2.2/numbers/2015550123/directory-listing")
+      .to_return(status: 202, body: envelope(number: "2015550123", status: "not_listed"))
+    result = client.numbers.remove_directory_listing("2015550123")
+    expect(result.status).to eq("not_listed")
+    expect(result.order_id).to be_nil
+  end
+
   it "raises on 403 permission denied" do
     stub_request(:delete, "#{SpecHelpers::BASE_URL}/v2.2/numbers/2015550123")
       .to_return(status: 403, body: { message: "denied" }.to_json)
